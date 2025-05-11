@@ -191,36 +191,52 @@ public class Main {
         Utils.limpiarPantalla();
         float minPrecio = -1;
         float maxPrecio = 0;
+        PintaConsola.pintaAdvertenciaBuscaPrecios();
+        String min, max;
         do{
-            try {
-                minPrecio = Float.parseFloat(pedirPorTeclado("\nIntroduzca un precio mínimo: "));
-                maxPrecio = Float.parseFloat(pedirPorTeclado("\nIntroduzca un precio maximo: "));
-            } catch (NumberFormatException e) {
-                Utils.pulsaEnter("No se introdujo un numero de forma correcta.");
+            min = pedirPorTeclado("\nIntroduzca un precio mínimo: ");
+            max = pedirPorTeclado("\nIntroduzca un precio maximo: ");
+            min = min.trim();
+            max = max.trim();
+            if (min.isEmpty() && max.isEmpty()){
+                Utils.veteADormir("Saliendo");
+                minPrecio = 0;
+                maxPrecio = 1;
+            } else{
+                try {
+                    if (min.isEmpty()) minPrecio = 0;
+                    else minPrecio = Float.parseFloat(min);
+                    if (max.isEmpty()) maxPrecio = Float.MAX_VALUE;
+                    else maxPrecio = Float.parseFloat(max);
+                } catch (NumberFormatException e) {
+                    Utils.pulsaEnter("No se introdujo un numero de forma correcta.");
+                }
             }
         } while (minPrecio<=-1 || maxPrecio <=0);
-        if (maxPrecio < minPrecio) {
-            Utils.pulsaEnter("Se introdujo un precio maximo menor que el minimo," +
-                    "\n se procede a intercambiar los valores.");
-            float aux = maxPrecio;
-            maxPrecio = minPrecio;
-            minPrecio = aux;
-        }
-        ArrayList<Producto> productosByPrecios = controlador.buscaProductosByPrecio(minPrecio, maxPrecio);
-        if (productosByPrecios.isEmpty())
-            Utils.pulsaEnter("No se encontró ningún producto en el rango de precios. (Pulsa Enter para continuar).");
-        else {
-            int cont = 0;
-            Utils.limpiarPantalla();
-            for (Producto p : productosByPrecios) {
-                PintaConsola.pintaProductoCatalogo(p);
-                if (cont == 4 || p == productosByPrecios.getLast()) {
-                    Utils.pulsaEnter("Producto " + (productosByPrecios.indexOf(p) + 1) + " de " +
-                            productosByPrecios.size());
-                    Utils.limpiarPantalla();
-                    cont = -1;
+        if (!min.isEmpty() || !max.isEmpty()){
+            if (maxPrecio < minPrecio) {
+                Utils.pulsaEnter("Se introdujo un precio maximo menor que el minimo," +
+                        "\n se procede a intercambiar los valores.");
+                float aux = maxPrecio;
+                maxPrecio = minPrecio;
+                minPrecio = aux;
+            }
+            ArrayList<Producto> productosByPrecios = controlador.buscaProductosByPrecio(minPrecio, maxPrecio);
+            if (productosByPrecios.isEmpty())
+                Utils.pulsaEnter("No se encontró ningún producto en el rango de precios. (Pulsa Enter para continuar).");
+            else {
+                int cont = 0;
+                Utils.limpiarPantalla();
+                for (Producto p : productosByPrecios) {
+                    PintaConsola.pintaProductoCatalogo(p);
+                    if (cont == 4 || p == productosByPrecios.getLast()) {
+                        Utils.pulsaEnter("Producto " + (productosByPrecios.indexOf(p) + 1) + " de " +
+                                productosByPrecios.size());
+                        Utils.limpiarPantalla();
+                        cont = -1;
+                    }
+                    cont++;
                 }
-                cont++;
             }
         }
     }

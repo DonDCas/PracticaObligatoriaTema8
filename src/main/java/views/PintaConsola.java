@@ -755,6 +755,24 @@ public class PintaConsola {
     public static void consultaIniciosSesion(int op, Controlador controlador) {
 
     }
+
+    public static void pintaAdvertenciaBuscaPrecios() {
+        System.out.println("""
+                                    -------------------------------------------------------------------------
+                                    
+                                    A continuación se le pedirá que ingrese un rango de precios.
+                                    
+                                    Si no quiere introducir un rango mínimo deje el formulario vacío.
+                                    
+                                    Si por el contrario no quieres introducir un rango maximo tras
+                                    introducir un rango mínimo deje el formulario vacío.
+                                    
+                                    Por último si desea salir sin consultar el rango de precios
+                                    deje los dos formularios vacíos.
+                                    
+                                    -------------------------------------------------------------------------
+                                    """);
+    }
 }
 
 /*

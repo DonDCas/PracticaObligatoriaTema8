@@ -169,7 +169,7 @@ public class Menu {
                     ║                                                           ║
                     ╠═══════════════════════════════════════════════════════════╣
                     """);
-            for (String s :marcas) System.out.printf("║ - %10s                                              ║\n", s);
+            for (String s :marcas) System.out.printf("║ - %-10s                                              ║\n", s);
             System.out.println("╚═══════════════════════════════════════════════════════════╝");
         }
     }

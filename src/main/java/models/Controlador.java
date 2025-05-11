@@ -23,7 +23,6 @@ public class Controlador implements Serializable {
     ArrayList<Cliente> clientes;
     ArrayList<Trabajador> trabajadores;
     ArrayList<Admin> admins;
-    ArrayList<Producto> catalogo;
     HashMap<String,Cliente> pedidoCliente;
 
     //Constructor
@@ -33,7 +32,6 @@ public class Controlador implements Serializable {
         this.clientes = new ArrayList<>();
         this.trabajadores = new ArrayList<>();
         this.admins = new ArrayList<>();
-        this.catalogo = new ArrayList<>();
         pedidoCliente = new HashMap<>();
     }
 
@@ -43,9 +41,6 @@ public class Controlador implements Serializable {
         if(Persistencia.existenDatosMapa()){
             pedidoCliente = Persistencia.cargaDatosMapa();
         }
-        if(Persistencia.existenDatosProducto()){
-            catalogo = Persistencia.cargaDatosProducto();
-        }else mockProductos();
         if(Persistencia.existenDatosAdmin()){
             admins = Persistencia.cargaDatosAdmin();
         }else{
@@ -82,11 +77,6 @@ public class Controlador implements Serializable {
     public void mockAdmin(){
         admins.addAll(DataAdmin.getAdminMock());
         Persistencia.guardaAdmins(this);
-    }
-
-    public void mockProductos(){
-        catalogo.addAll(DataProductos.getProductosMock());
-        Persistencia.guardaDatosProductos(catalogo);
     }
 
     public void mockPedidos() {
@@ -150,10 +140,6 @@ public class Controlador implements Serializable {
         return daoProductos.readAll(dao);
     }
 
-    public void setCatalogo(ArrayList<Producto> catalogo) {
-        this.catalogo = catalogo;
-    }
-
     // Otros metodos
 
     //Metodo que sirve para encontrar el usuario que esta intentando iniciar sesión.
@@ -186,8 +172,7 @@ public class Controlador implements Serializable {
 
     //Busca un producto por la ID y devuelve Null en caso de que no exista
     public Producto buscaProductoById(int id) {
-        for(Producto p : catalogo) if (p.getId() == id) return p;
-        return null;
+        return daoProductos.readById(dao, id);
     }
 
     // Metodo que crea un pedido, lo añade a la lista de pedidos del cliente e inicia la asignación a un trabajador
@@ -242,40 +227,22 @@ public class Controlador implements Serializable {
 
     //Este devuelve un Arraylist de productos que pertenezan a la marca que indica el cliente
     public ArrayList<Producto> buscaProductosByMarca(String marca) {
-        ArrayList<Producto> productosByMarcas = new ArrayList<>();
-        for (Producto p : catalogo)
-            if (Utils.quitaAcentos(p.getMarca().toUpperCase()).contains
-                    (Utils.quitaAcentos(marca.toUpperCase()))) productosByMarcas.add(new Producto(p));
-        if (productosByMarcas != null) return productosByMarcas;
-        return null;
+        return daoProductos.readByMarcas(dao, marca);
     }
 
     //Este devuelve un Arraylist de productos que pertenezan a la modelo que indica el cliente
     public ArrayList<Producto> buscaProductosByModelo(String modelo) {
-        ArrayList<Producto> productosByModelo = new ArrayList<>();
-        for (Producto p : catalogo)
-            if (Utils.quitaAcentos(p.getModelo().toUpperCase()).contains
-                    (Utils.quitaAcentos(modelo.toUpperCase())))
-                productosByModelo.add(new Producto(p));
-        return productosByModelo;
+        return daoProductos.readByModelo(dao,modelo);
     }
 
     //Este metodo devuelve un Arraylist de productos que cuya descripción contenga lo indicado por el cliente
     public ArrayList<Producto> buscaProductosByDescripcion(String descripcion) {
-        ArrayList<Producto> productosByDescripcion = new ArrayList<>();
-        for (Producto p : catalogo)
-            if (Utils.quitaAcentos(p.getDescripcion().toUpperCase()).contains
-                    (Utils.quitaAcentos(descripcion.toUpperCase())))
-                productosByDescripcion.add(new Producto(p));
-        return productosByDescripcion;
+        return daoProductos.readByDescripcion(dao,descripcion);
     }
 
     //Este metodo devuelve un array list de productos entre un rango de precios indicado por el cliente
     public ArrayList<Producto> buscaProductosByPrecio(float precioMin, float precioMax) {
-        ArrayList<Producto> productosByPrecios = new ArrayList<>();
-        for (Producto p : catalogo)
-            if (p.getPrecio() >= precioMin && p.getPrecio() <= precioMax) productosByPrecios.add(new Producto(p));
-        return productosByPrecios;
+        return daoProductos.readByRangoPrecios(dao,precioMin,precioMax);
     }
 
     //Metodo que devuelve un arraylist con todos los productos que incluyan el string que recibe
@@ -484,6 +451,7 @@ public class Controlador implements Serializable {
         boolean existeID = false;
         do{
             existeID = false;
+            ArrayList<Producto> catalogo = daoProductos.readAll(dao);
             //Generamos un numero aleatorio entre 1 y 100000 + la cantidad de productos registrados.
             id = Utils.numAleatorio100(1,100000+catalogo.size());
             // comprobamos que no exista la id. En caso de que exista el metodo devolvera -1
@@ -538,7 +506,7 @@ public class Controlador implements Serializable {
     // Este metodo devuelve un ArrayLists de todas las marcas que hay disponibles para elegir.
     public ArrayList<String> devuelveListaMarcas() {
         ArrayList<String> marcas = new ArrayList<>();
-        for (Producto p : catalogo) if (!marcas.contains(p.getMarca())) marcas.add(p.getMarca());
+        for (Producto p : daoProductos.readAll(dao)) if (!marcas.contains(p.getMarca())) marcas.add(p.getMarca());
         Collections.sort(marcas);
         return marcas;
     }
