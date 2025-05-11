@@ -684,6 +684,7 @@ public class Controlador implements Serializable {
     }
 
     public void clonarProduto(Producto productoTemp) {
+// TODO añadir update de la tabla producto para la base de datos
         Producto original = buscaProductoById(productoTemp.getId());
         original.setMarca(productoTemp.getMarca());
         original.setModelo(productoTemp.getModelo());
