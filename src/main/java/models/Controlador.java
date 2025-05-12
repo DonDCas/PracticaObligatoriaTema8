@@ -683,15 +683,10 @@ public class Controlador implements Serializable {
         Persistencia.guardaDatosTrabajador(trabajador);
     }
 
-    public void clonarProduto(Producto productoTemp) {
+    public boolean ModificaProduto(Producto productoTemp) {
 // TODO añadir update de la tabla producto para la base de datos
         Producto original = buscaProductoById(productoTemp.getId());
-        original.setMarca(productoTemp.getMarca());
-        original.setModelo(productoTemp.getModelo());
-        original.setDescripcion(productoTemp.getDescripcion());
-        original.setPrecio(productoTemp.getPrecio());
-        original.setRelevancia(productoTemp.getRelevancia());
-        Persistencia.guardaDatosProducto(original);
+        return daoProductos.updateProducto(dao, original.getId(), productoTemp);
     }
 
     public boolean addComentario(String idPedido, String comentario) {

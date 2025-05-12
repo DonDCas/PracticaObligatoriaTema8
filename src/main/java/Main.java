@@ -1199,7 +1199,7 @@ public class Main {
                Utils.pulsaEnter("No se introdujo un numero.");
                if (pedirPorTecladoSN("¿Desea volver a intentarlo? (S/N): ").equalsIgnoreCase("n")) id = 0;
            }
-           if (id == -1 && pedirPorTecladoSN("¿No se introdujo una ID desea volver a ver la lista? (S/N): ").equalsIgnoreCase("N")) id = 0;
+           if (id == -1 && pedirPorTecladoSN("No se elegido un producto. ¿Volver a ver la lista? (S/N): ").equalsIgnoreCase("N")) id = 0;
            Producto producto = controlador.buscaProductoById(id);
            if(producto != null){
                Producto productoElegido = new Producto(producto);
@@ -1230,8 +1230,10 @@ public class Main {
                        }
                    } while (op != 0);
                    if (modificadoDato)
-                       if (pedirPorTecladoSN("¿Quieres guardar los datos modificados en el nuevo? (S/N): ").equalsIgnoreCase("s"))
-                           controlador.clonarProduto(productoElegido);
+                       if (pedirPorTecladoSN("¿Quieres guardar los datos modificados en el nuevo? (S/N): ").equalsIgnoreCase("s")){
+                           if (controlador.ModificaProduto(productoElegido)) Utils.pulsaEnter("Cambios guardados.");
+                           else Utils.pulsaEnter("Fallo al guardar los cambios.");
+                       }
                }
            } else if(id!=0) Utils.veteADormir("Producto no encontrado.\nVolviendo a mostrar la lista.");
         }while (id!=0);

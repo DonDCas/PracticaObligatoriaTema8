@@ -18,4 +18,6 @@ public interface DaoProductos {
 
     public Producto readById(DAOManager dao, int id);
 
+    public boolean updateProducto(DAOManager dao, int id ,Producto producto);
+
 }
