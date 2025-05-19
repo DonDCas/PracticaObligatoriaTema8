@@ -2,8 +2,7 @@ package models;
 
 import Communications.Email;
 import Communications.Telegram;
-import DAO.DAOManager;
-import DAO.DaoProductosSQL;
+import DAO.*;
 import data.DataAdmin;
 import data.DataClientes;
 import data.DataProductos;
@@ -18,20 +17,22 @@ import java.util.Collections;
 import java.util.HashMap;
 
 public class Controlador implements Serializable {
-    private DAOManager dao;
+    public DAOManager dao;
+    public DaoUsuariosSQL daoUsuarios;
     private DaoProductosSQL daoProductos;
-    ArrayList<Cliente> clientes;
+    private DaoAdminsSQL daoAdmin;
+    private DaoClientesSQL daoClientes;
     ArrayList<Trabajador> trabajadores;
-    ArrayList<Admin> admins;
     HashMap<String,Cliente> pedidoCliente;
 
     //Constructor
     public Controlador() {
         dao = DAOManager.getSinglentonInstance();
+        daoUsuarios = new DaoUsuariosSQL();
         daoProductos = new DaoProductosSQL();
-        this.clientes = new ArrayList<>();
+        daoAdmin = new DaoAdminsSQL();
+        daoClientes = new DaoClientesSQL();
         this.trabajadores = new ArrayList<>();
-        this.admins = new ArrayList<>();
         pedidoCliente = new HashMap<>();
     }
 
@@ -41,26 +42,12 @@ public class Controlador implements Serializable {
         if(Persistencia.existenDatosMapa()){
             pedidoCliente = Persistencia.cargaDatosMapa();
         }
-        if(Persistencia.existenDatosAdmin()){
-            admins = Persistencia.cargaDatosAdmin();
-        }else{
-            mockAdmin();
-            //Cargar mock admins
-        }
         if(Persistencia.existenDatosTrabajador()){
             trabajadores = Persistencia.cargaDatosTrabajador();
         }else{
             mockTrabajadores();
             //Cargar mock trabajadores
         }
-        if(Persistencia.existenDatosCliente()){
-            clientes = Persistencia.cargaDatosCliente();
-        }else{
-            mockCliente();
-            mockPedidos();
-            //Cargar mock Clientes y pedidos
-        }
-
     }
 
     private void mockTrabajadores() {
@@ -68,56 +55,9 @@ public class Controlador implements Serializable {
         Persistencia.guardaDatosTrabajadores(this);
     }
 
-    //Generador de datos clientes , trabajadores y admins
-    public void mockCliente() {
-        clientes.addAll(DataClientes.getClientesMock());
-        Persistencia.guardaDatosClientes(this);
-    }
-
-    public void mockAdmin(){
-        admins.addAll(DataAdmin.getAdminMock());
-        Persistencia.guardaAdmins(this);
-    }
-
-    public void mockPedidos() {
-        clientes.get(0).addProductoCarro(buscaProductoById(14566));
-        clientes.get(0).addProductoCarro(buscaProductoById(84635));
-        confirmaPedidoCliente(clientes.get(0).getId());
-        clientes.get(0).addProductoCarro(buscaProductoById(93639));
-        clientes.get(0).addProductoCarro(buscaProductoById(83263));
-        confirmaPedidoCliente(clientes.get(0).getId());
-        /*clientes.get(0).addProductoCarro(buscaProductoById(67233));
-        clientes.get(0).addProductoCarro(buscaProductoById(456333));
-        confirmaPedidoCliente(clientes.get(0).getId());
-        clientes.get(0).addProductoCarro(buscaProductoById(93639));
-        clientes.get(0).addProductoCarro(buscaProductoById(83263));
-        confirmaPedidoCliente(clientes.get(0).getId());
-        clientes.get(0).addProductoCarro(buscaProductoById(93639));
-        clientes.get(0).addProductoCarro(buscaProductoById(83263));
-        confirmaPedidoCliente(clientes.get(0).getId());
-        clientes.get(0).addProductoCarro(buscaProductoById(93639));
-        clientes.get(0).addProductoCarro(buscaProductoById(83263));
-        confirmaPedidoCliente(clientes.get(0).getId());
-        clientes.get(0).addProductoCarro(buscaProductoById(93639));
-        clientes.get(0).addProductoCarro(buscaProductoById(83263));
-        confirmaPedidoCliente(clientes.get(0).getId());
-        clientes.get(0).addProductoCarro(buscaProductoById(84635));
-        clientes.get(0).addProductoCarro(buscaProductoById(83263));*/
-        asignaPedido(clientes.get(0).getPedidos().get(0).getId(),trabajadores.get(0).getId());
-        asignaPedido(clientes.get(0).getPedidos().get(1).getId(),trabajadores.get(0).getId());
-        clientes.get(0).getPedidos().get(1).setFechaPedido(LocalDate.parse("2023-01-01"));
-        //Segundo pedido del cliente a fecha mucho más vieja para comprobar que se ordenan bien por fechas
-        //clientes.get(0).getPedidos().get(3).setFechaPedido(LocalDate.parse("2024-02-02"));
-        //clientes.get(0).getPedidos().get(2).setFechaPedido(LocalDate.parse("2025-04-04"));
-    }
-
     //Getters y Setters
     public ArrayList<Cliente> getClientes() {
-        return clientes;
-    }
-
-    public void setClientes(ArrayList<Cliente> clientes) {
-        this.clientes = clientes;
+        return daoUsuarios.readAllClientes(dao);
     }
 
     public ArrayList<Trabajador> getTrabajadores() {
@@ -129,11 +69,7 @@ public class Controlador implements Serializable {
     }
 
     public ArrayList<Admin> getAdmins() {
-        return admins;
-    }
-
-    public void setAdmins(ArrayList<Admin> admins) {
-        this.admins = admins;
+        return daoUsuarios.readAllAdmins(dao);
     }
 
     public ArrayList<Producto> getCatalogo() {
@@ -145,6 +81,7 @@ public class Controlador implements Serializable {
     //Metodo que sirve para encontrar el usuario que esta intentando iniciar sesión.
     //Si no lo encuentra devuelve Null
     public Object login(String email, String clave) {
+        return daoUsuarios.readUser(dao,email,clave);/*
         for(Admin admin :admins)
             if (admin.login(email,clave))
                 return admin;
@@ -154,7 +91,7 @@ public class Controlador implements Serializable {
         for(Cliente clie :clientes)
             if (clie.login(email,clave))
                 return clie;
-        return null;
+        return null;*/
     }
 
     //Metodo que comprueba que devuelve añade un producto al carro del cliente
@@ -221,8 +158,7 @@ public class Controlador implements Serializable {
     }
 
     public Cliente buscaClienteById(String idCliente) {
-        for (Cliente c : clientes) if (c.getId().equals(idCliente)) return c;
-        return null;
+        return (Cliente) daoUsuarios.readUserById(dao, idCliente);
     }
 
     //Este devuelve un Arraylist de productos que pertenezan a la marca que indica el cliente
@@ -288,7 +224,7 @@ public class Controlador implements Serializable {
     //Metodo que devuelve un Arraylist contodos los pedidos realizados
     public ArrayList<Pedido> getTodosPedidos() {
         ArrayList<Pedido> pedidosTotales = new ArrayList<>();
-        for(Cliente c : clientes){
+        for(Cliente c : daoUsuarios.readAllClientes(dao)){
             for (Pedido pedidoCliente : c.getPedidos()){
                 if (!pedidosTotales.contains(pedidoCliente)) pedidosTotales.add(pedidoCliente);
             }
@@ -302,7 +238,7 @@ public class Controlador implements Serializable {
     }
 
     public Pedido buscaPedidoById(String idPedido) {
-        for (Cliente c : clientes)for(Pedido p : c.getPedidos()) if (p.getId().equalsIgnoreCase(idPedido)) return p;
+        for (Cliente c : daoUsuarios.readAllClientes(dao))for(Pedido p : c.getPedidos()) if (p.getId().equalsIgnoreCase(idPedido)) return p;
         return null;
     }
 
@@ -350,7 +286,7 @@ public class Controlador implements Serializable {
         ArrayList<Pedido> pedidosSinTrabajador = new ArrayList<>();
         ArrayList<Pedido> pedidosDeClientes = new ArrayList<>();
         boolean conTrabajador = false;
-        for(Cliente cliente : clientes) pedidosDeClientes.addAll(cliente.getPedidos());
+        for(Cliente cliente : daoUsuarios.readAllClientes(dao)) pedidosDeClientes.addAll(cliente.getPedidos());
 
         for (Pedido pedidoDelTotal : pedidosDeClientes){
             conTrabajador = false;
@@ -433,16 +369,15 @@ public class Controlador implements Serializable {
     public String generaIdCliente() {
         boolean existeID = false;
         int id = -1;
+        String idCliente = "";
         do {
             existeID = false;
             //El numero aleatorio es entre 1 y 100.000 + la cantidad de usuarios ya registrados.
-            id = Utils.numAleatorio100(1, 100000 + clientes.size());
-            for (Cliente c : clientes) {
-                int idRegistrada = Integer.parseInt(c.getId().substring(1));
-                if (idRegistrada == id) existeID = true;
-            }
+            id = Utils.numAleatorio100(1, 100000 + daoUsuarios.readAllClientes(dao).size());
+            idCliente = "C"+id;
+            existeID = daoClientes.compruebaIdCliente(dao,idCliente);
         }while (existeID);
-        return "C".concat(String.valueOf(id));
+        return idCliente;
     }
 
     //Genera un id para los productos
@@ -469,7 +404,7 @@ public class Controlador implements Serializable {
             //Generamos un numero de ID de forma aleatoria entre 1 y 100000 + la cantidad de pedidos totales
             id = Utils.numAleatorio100(1,100000+numPedidosTotales());
             //Comprobamos que la ID no existe buscandola entre todos los clientes y todos los pedidos de cada cliente
-            for(Cliente c : clientes){
+            for(Cliente c : daoUsuarios.readAllClientes(dao)){
                 for(Pedido p : c.getPedidos()){
                     int idRegistrada = Integer.parseInt(p.getId().substring(1));
                     // Si encontramos coincidencia levantamos bandera y tendremos que volver a empezar el proceso
@@ -514,10 +449,7 @@ public class Controlador implements Serializable {
 
     // Metodo que comprueba si existe un correo entre los usuarios.
     public boolean existeCorreo(String correo) {
-        for (Cliente c : clientes) if(c.getEmail().toLowerCase().equals(correo.toLowerCase())) return true;
-        for (Trabajador t : trabajadores) if(t.getEmail().toLowerCase().equals(correo.toLowerCase())) return true;
-        for (Admin a : admins) if(a.getEmail().toLowerCase().equals(correo.toLowerCase())) return true;
-        return false;
+        return daoUsuarios.compruebaEmail(dao, correo);
     }
 
     // Metodo que genera un token, un id
@@ -525,28 +457,20 @@ public class Controlador implements Serializable {
     public boolean nuevoCliente(String correo, String clave, String nombre,
                                 String direccion, String localidad, String provincia, int movil) {
         String token = Utils.generarToken();
-        if (Email.enviarCorreoVerificacionRegistro(token,nombre, correo)){
-            Cliente clienteNuevo = new Cliente (generaIdCliente(), correo,
-                    clave, nombre, localidad, provincia, direccion, movil, token);
-            if (clienteNuevo != null){
-                Persistencia.guardaDatosCliente(clienteNuevo);
-                clientes.add(clienteNuevo);
-            }
-
-        }
-        return false;
+        String id = generaIdCliente();
+        return daoUsuarios.insertaCliente(dao,id,correo,clave,nombre,movil ,direccion,localidad,provincia, token);
     }
 
     //Metodo que comprueba si el cliente esta validado
     public boolean compruebaClienteValidado(Cliente user) {
-        return user.isCorreoValidado();
+        return daoClientes.compruebaCorreoCliente(dao, user.getId());
     }
 
     //Metodo que valida un cliente si el token que da el usuario es correcto
     public boolean validarCliente(Cliente user, String token) {
         if (user.getToken().equals(token)){
             user.setCorreoValidado(true);
-            Persistencia.guardaDatosCliente(user);
+            daoClientes.updateCorreoValido(dao,user.isCorreoValidado(),user);
         }
         return user.isCorreoValidado();
     }
@@ -594,14 +518,14 @@ public class Controlador implements Serializable {
                         String token = Utils.generarToken();
                         temp.setToken(token);
                         temp.setCorreoValidado(false);
-                        temp.setEmail(nuevoDato);
+                        temp.setCorreo(nuevoDato);
                         return true;
                     }
                 }
                 return false;
             case 7:
                 if (Utils.validaClave(nuevoDato)){
-                    temp.setClave(nuevoDato);
+                    temp.setPass(nuevoDato);
                     return true;
                 }
         }
@@ -609,11 +533,11 @@ public class Controlador implements Serializable {
    }
 
    //Metodo que clona los datos de un cliente copia en uno ya almacenado
-    public void clonarClienteCopia(Cliente cliente, Cliente clienteCopia) {
+    public boolean clonarClienteCopia(Cliente cliente, Cliente clienteCopia) {
         cliente.setId(clienteCopia.getId());
         cliente.setNombre(clienteCopia.getNombre());
-        cliente.setClave(clienteCopia.getClave());
-        cliente.setEmail(clienteCopia.getEmail());
+        cliente.setPass(clienteCopia.getPass());
+        cliente.setCorreo(clienteCopia.getCorreo());
         cliente.setMovil(clienteCopia.getMovil());
         cliente.setDireccion(clienteCopia.getDireccion());
         cliente.setLocalidad(clienteCopia.getLocalidad());
@@ -622,7 +546,7 @@ public class Controlador implements Serializable {
         cliente.setCorreoValidado(clienteCopia.isCorreoValidado());
         cliente.setCarro(clienteCopia.getCarro());
         cliente.setPedidos(clienteCopia.getPedidos());
-        Persistencia.guardaDatosCliente(cliente);
+        return daoUsuarios.updateUsuario(dao, clienteCopia);
     }
 
     //Metodo que borra el carrito entero del cliente
@@ -764,8 +688,8 @@ public class Controlador implements Serializable {
             Cliente cliente = (Cliente) user;
             Cliente temp = (Cliente) objetoModificado;
             if (!cliente.getNombre().equals(temp.getNombre())) return true;
-            if (!cliente.getEmail().equals(temp.getEmail())) return true;
-            if (!cliente.getClave().equals(temp.getClave())) return true;
+            if (!cliente.getCorreo().equals(temp.getCorreo())) return true;
+            if (!cliente.getPass().equals(temp.getPass())) return true;
             if (!cliente.getDireccion().equals(temp.getDireccion())) return true;
             if (!cliente.getLocalidad().equals(temp.getLocalidad())) return true;
             if (!cliente.getProvincia().equals(temp.getProvincia())) return true;
@@ -777,11 +701,7 @@ public class Controlador implements Serializable {
     // Metodo para comprobar si existe un telefono movil ya en registro.
     public int existemovil(int movil) {
         if (!Utils.validaTelefono(movil)) return -1;
-        for(Cliente c : clientes){
-            if (c.getMovil() == movil) return -2;
-        }
-        for (Trabajador t : trabajadores)
-            if (t.getMovil() == movil) return -2;
+        if (daoUsuarios.compruebaMovil(dao,movil)) return -2;
         return 1;
     }
 
@@ -860,7 +780,7 @@ public class Controlador implements Serializable {
 
     public ArrayList<Pedido> getPedidosCompletados() {
         ArrayList<Pedido> pedidosCompletados = new ArrayList<>();
-        for (Cliente cli : clientes){
+        for (Cliente cli : daoUsuarios.readAllClientes(dao)){
             for(Pedido pedidoCliente : cli.getPedidos()){
                 if(pedidoCliente.getEstado() > 1) pedidosCompletados.add(pedidoCliente);
             }
@@ -870,7 +790,7 @@ public class Controlador implements Serializable {
 
     public ArrayList<Pedido> getPedidosSinCompletar() {
         ArrayList<Pedido> pedidosNoCompletados = new ArrayList<>();
-        for (Cliente cli : clientes){
+        for (Cliente cli : daoUsuarios.readAllClientes(dao)){
             for(Pedido pedidoCliente : cli.getPedidos()){
                 if(pedidoCliente.getEstado() < 2) pedidosNoCompletados.add(pedidoCliente);
             }

@@ -16,7 +16,7 @@ public class PedidoClienteDataClass implements Serializable {
         this.idPedido = idPedido;
         idCliente = cliente.getId();
         nombreCliente = cliente.getNombre();
-        emailCliente = cliente.getEmail();
+        emailCliente = cliente.getCorreo();
         direccionCliente = cliente.getDireccion();
         localidadCliente = cliente.getLocalidad();
         provinciaCliente = cliente.getProvincia();

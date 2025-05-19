@@ -3,46 +3,34 @@ package models;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Cliente implements Serializable {
+public class Cliente extends Usuario implements Serializable {
 
-    private String id;
-    private String email;
-    private String clave;
-    private String nombre;
     private String localidad;
     private String provincia;
     private String direccion;
-    private int movil;
     private String token;
     private boolean correoValidado;
     private ArrayList<Pedido> pedidos;
     private ArrayList<Producto> carro;
 
     // Constructor
-    public Cliente(String id, String email, String clave, String nombre, String localidad, String provincia, String direccion, int movil, String token) {
-        this.id = id;
-        this.email = email;
-        this.clave = clave;
-        this.nombre = nombre;
+    public Cliente(String id, String email, String clave, String nombre, String localidad,
+                   String provincia, String direccion, int movil, String token, boolean correoValidado) {
+        super(id, nombre, clave, email, movil);
         this.localidad = localidad;
         this.provincia = provincia;
         this.direccion = direccion;
-        this.movil = movil;
         this.token = token;
-        correoValidado = false;
+        this.correoValidado = correoValidado;
         pedidos = new ArrayList<>();
         carro = new ArrayList<>();
     }
 
     public Cliente(Cliente cliente) {
-        id = cliente.getId();
-        email = cliente.getEmail();
-        clave = cliente.getClave();
-        nombre = cliente.getNombre();
+        super(cliente.id,cliente.nombre,cliente.pass, cliente.correo, cliente.movil);
         localidad = cliente.getLocalidad();
         provincia = cliente.getProvincia();
         direccion = cliente.getDireccion();
-        movil = cliente.getMovil();
         token = cliente.getToken();
         correoValidado = cliente.isCorreoValidado();
         pedidos = new ArrayList<>(cliente.getPedidos());
@@ -50,37 +38,6 @@ public class Cliente implements Serializable {
     }
 
     // Getter y Setter
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getClave() {
-        return clave;
-    }
-
-    public void setClave(String clave) {
-        this.clave = clave;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
 
     public String getLocalidad() {
         return localidad;
@@ -104,14 +61,6 @@ public class Cliente implements Serializable {
 
     public void setDireccion(String direccion) {
         this.direccion = direccion;
-    }
-
-    public int getMovil() {
-        return movil;
-    }
-
-    public void setMovil(int movil) {
-        this.movil = movil;
     }
 
     public String getToken() {
@@ -147,11 +96,6 @@ public class Cliente implements Serializable {
     }
 
     //Otros metodos
-
-    public boolean login(String email, String pass) {
-        if (email.equals(this.email) && (pass.equals(this.clave))) return true;
-        return false;
-    }
 
     //Añadimos un producto al carro y en caso de que el producto ya exista en el devuelve false
     public boolean addProductoCarro(Producto producto) {

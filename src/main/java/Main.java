@@ -14,12 +14,7 @@ public class Main {
     public static final Scanner S = new Scanner(System.in);
     public static void main(String[] args) {
         Controlador controlador = new Controlador();
-        controlador.cargarDatos();
-        /*if (pedirPorTecladoSN("Quieres cargar datos mock? (S/N): ").equalsIgnoreCase("s")){
-            controlador.mock();
-            if (pedirPorTecladoSN("Quieres generar Pedidos Mock? (S/N): ").equalsIgnoreCase("s"))
-                controlador.mockPedidos();
-        }*/
+
         do{
             Menu.logo();
             Object user = menuInicio(controlador);
@@ -399,7 +394,7 @@ public class Main {
                                 movil = Integer.parseInt(introMovil);
                                 if (!Utils.validaTelefono(movil)){
                                     System.out.println("Numero mal introducido.");
-                                    if (pedirPorTecladoSN("¿Quieres volver a intentar introducir un numero?(S/N: ").equalsIgnoreCase("n"))
+                                    if (pedirPorTecladoSN("¿Quieres volver a intentar introducir un numero?(S/N): ").equalsIgnoreCase("n"))
                                         introMovil = "";
                                     pedirMovil = false;
                                 }else pedirMovil = false;
@@ -513,12 +508,12 @@ public class Main {
         System.out.println("Hemos observado que no tienes validado el correo.\n" +
                 "Visita tu correo y busca el mail que te hemos envidado con el token.");
         String token;
-        Boolean validado = false;
+        boolean validado = false;
         int oportunidades = 0;
         do{
             oportunidades ++;
             token = pedirPorTeclado("Introduce el token que hayas recibido: ");
-            if (user instanceof Cliente) if(!controlador.validarCliente((Cliente) user, token)){
+            if(!controlador.validarCliente((Cliente) user, token)){
                 System.out.print("Token erroneo.");
                 System.out.println((oportunidades!=4)
                         ? "Quedan " + (4-oportunidades) + " oportunidades"
@@ -528,7 +523,7 @@ public class Main {
                 validado = true;
             }
         }while (!validado && oportunidades!=4);
-        if (user instanceof Cliente) if (controlador.compruebaClienteValidado((Cliente) user)) menuCliente(controlador,(Cliente) user);
+        if (controlador.compruebaClienteValidado((Cliente) user)) menuCliente(controlador,(Cliente) user);
     }
 
     //Menu Principal de los Admins
@@ -623,10 +618,10 @@ public class Main {
             }else{
 
                 switch (op){
-                    case 1 -> controlador.exportarAExcelPedidos(controlador.getTodosPedidos(), "TodosLosPedidos", admin.getEmail());
-                    case 2 -> controlador.exportarAExcelPedidos(controlador.pedidosSinTrabajador(), "PedidosSinAsignar", admin.getEmail());
-                    case 3 -> controlador.exportarAExcelPedidos(controlador.getPedidosCompletados(), "Pedidos_Completados", admin.getEmail());
-                    case 4 -> controlador.exportarAExcelPedidos(controlador.getPedidosSinCompletar(), "Pedidos_Sin_Completar", admin.getEmail());
+                    case 1 -> controlador.exportarAExcelPedidos(controlador.getTodosPedidos(), "TodosLosPedidos", admin.getCorreo());
+                    case 2 -> controlador.exportarAExcelPedidos(controlador.pedidosSinTrabajador(), "PedidosSinAsignar", admin.getCorreo());
+                    case 3 -> controlador.exportarAExcelPedidos(controlador.getPedidosCompletados(), "Pedidos_Completados", admin.getCorreo());
+                    case 4 -> controlador.exportarAExcelPedidos(controlador.getPedidosSinCompletar(), "Pedidos_Sin_Completar", admin.getCorreo());
                 }
                 if(op>0 && pedirPorTecladoSN("¿Desea realizar otra operación?(S/N): ").equalsIgnoreCase("n")) op = 0;
             }
@@ -1359,13 +1354,14 @@ public class Main {
     //Funcion para pedir al usuario un ID de un producto y añadirlo al carrito
     private static void addProductoCarro(Controlador controlador, Cliente user) {
         int idProducto = -1;
+        int cantidad = -1;
         String termino = pedirPorTeclado("¿Qué deseas añadir al carrito?: ");
         do{
+            idProducto = mostrarCatalogoPorTermino(controlador, termino);
+            if (idProducto == -1) idProducto = -2;
             if(idProducto==-2 && pedirPorTecladoSN("¿Añadir un nuevo termino? (S/N): ").equalsIgnoreCase("s"))
                 termino = pedirPorTeclado("¿Qué deseas añadir al carrito?: ");
             else idProducto = -1;
-            idProducto = mostrarCatalogoPorTermino(controlador, termino);
-            if (idProducto == -1) idProducto = -2;
         }while (idProducto==-2 && pedirPorTecladoSN("¿Volver a buscar? (S/N): ").equalsIgnoreCase("s"));
         if(idProducto != -2){
             Producto productoBuscado = controlador.buscaProductoById(idProducto);
@@ -1530,11 +1526,12 @@ public class Main {
         }while (op!=8);
         if(controlador.existeCambios(temp, user)){
             if (pedirPorTeclado("¿Quieres guardar los datos? (S/N): ").equalsIgnoreCase("s")){
-                controlador.clonarClienteCopia(user, temp);
-                if (correoNuevo){
-                    Email.enviaCorreoVerificacionCambioCorreo(temp.getToken(),temp.getNombre(), temp.getEmail());
-                }
-                Utils.pulsaEnter("Datos modificados.");
+                if (controlador.clonarClienteCopia(user, temp)){
+                    if (correoNuevo){
+                        Email.enviaCorreoVerificacionCambioCorreo(temp.getToken(),temp.getNombre(), temp.getCorreo());
+                    }
+                    Utils.pulsaEnter("Datos modificados.");
+                }else Utils.pulsaEnter("Hubo algún error al modificar los datos.");
             }else Utils.pulsaEnter("No se modificó ningún dato.");
         }else Utils.pulsaEnter("No se modifico ningún dato.");
     }

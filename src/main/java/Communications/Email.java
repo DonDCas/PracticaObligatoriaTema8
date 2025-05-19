@@ -139,7 +139,7 @@ public class Email {
                 + "<h3 style=\"color: #0056b3;\">Datos del cliente:</h3>"
                 + "<p><b>Nombre:</b> " + cliente.getNombre() + "</p>"
                 + "<p><b>Dirección:</b> " + cliente.getDireccion() + ", " + cliente.getLocalidad() + ", " + cliente.getProvincia() + "</p>"
-                + "<p><b>Correo:</b> " + cliente.getEmail() + "</p>"
+                + "<p><b>Correo:</b> " + cliente.getCorreo() + "</p>"
 
                 + "<h3 style=\"color: #0056b3;\">Productos del pedido:</h3>"
                 + "<ul>" + productosHTML.toString() + "</ul>"
@@ -202,7 +202,7 @@ public class Email {
     }
 
     public static boolean pedidoNuevo(Cliente cliente, Pedido pedido, String rutaPDF, String nombreArchivo) {
-        String email = cliente.getEmail();
+        String email = cliente.getCorreo();
         StringBuilder productosHTML = new StringBuilder();
 
         for (Producto producto : pedido.getProductos()) {

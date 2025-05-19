@@ -290,7 +290,7 @@ public class PintaConsola {
           Localidad:          %-42s        
                                                                   
         ╔══════════════════════════════════════════════════════════╗
-        """, cliente.getNombre(),cliente.getEmail(), cliente.getMovil(), cliente.getDireccion(),
+        """, cliente.getNombre(),cliente.getCorreo(), cliente.getMovil(), cliente.getDireccion(),
         localidadProvincia);
     }
 
@@ -315,7 +315,7 @@ public class PintaConsola {
         ║                                                                ║
         ╚════════════════════════════════════════════════════════════════╝
 
-        """, clienteExtendido.getId(),clienteExtendido.getNombre(),clienteExtendido.getEmail(), clienteExtendido.getMovil(),
+        """, clienteExtendido.getId(),clienteExtendido.getNombre(),clienteExtendido.getCorreo(), clienteExtendido.getMovil(),
                 clienteExtendido.getDireccion(), localidadProvincia,
                 clienteExtendido.getPedidos().size(), clienteExtendido.cuentaPedidosPendientes(),
                 (clienteExtendido.getPedidos().size() - clienteExtendido.cuentaPedidosPendientes()));
@@ -704,13 +704,13 @@ public class PintaConsola {
     public static void ultimasSesiones(Controlador controlador) {
         ArrayList<String> lineas = new ArrayList<>();
         for (Admin admin : controlador.getAdmins()){
-            lineas.add(String.format("║ %-10s - Tipo Usuario: %-13s - %-37s - %-45s ║\n",admin.getId(), "Administrador" ,admin.getEmail(), controlador.ultimoInicioSesionParaAdmin(admin)));
+            lineas.add(String.format("║ %-10s - Tipo Usuario: %-13s - %-37s - %-45s ║\n",admin.getId(), "Administrador" ,admin.getCorreo(), controlador.ultimoInicioSesionParaAdmin(admin)));
         }
         for (Trabajador trabajador : controlador.getTrabajadores()){
             lineas.add(String.format("║ %-10s - Tipo Usuario: %-13s - %-37s - %-45s ║\n",trabajador.getId(), "Trabajador" ,trabajador.getEmail(), controlador.ultimoInicioSesionParaAdmin(trabajador)));
         }
         for (Cliente cliente : controlador.getClientes()){
-            lineas.add(String.format("║ %-10s - Tipo Usuario: %-13s - %-37s - %-45s ║\n",cliente.getId(), "Cliente" ,cliente.getEmail(), controlador.ultimoInicioSesionParaAdmin(cliente)));
+            lineas.add(String.format("║ %-10s - Tipo Usuario: %-13s - %-37s - %-45s ║\n",cliente.getId(), "Cliente" ,cliente.getCorreo(), controlador.ultimoInicioSesionParaAdmin(cliente)));
         }
         System.out.printf("""
                 ╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗

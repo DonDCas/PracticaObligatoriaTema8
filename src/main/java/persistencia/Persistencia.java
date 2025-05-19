@@ -291,7 +291,7 @@ public class Persistencia {
         if (user != null){
             if (user instanceof Admin){
                 nombreUser = ((Admin) user).getNombre();
-                correoUser = ((Admin) user).getEmail();
+                correoUser = ((Admin) user).getCorreo();
                 tipoUser = "Admin";
             }
             if (user instanceof Trabajador){
@@ -301,7 +301,7 @@ public class Persistencia {
             }
             if (user instanceof Cliente){
                 nombreUser = ((Cliente) user).getNombre();
-                correoUser = ((Cliente) user).getEmail();
+                correoUser = ((Cliente) user).getCorreo();
                 tipoUser = "Cliente";
             }
         } else{
@@ -342,7 +342,7 @@ public class Persistencia {
         }
         if (user instanceof Admin){
             nombreUser = ((Admin) user).getNombre();
-            correoUser = ((Admin) user).getEmail();
+            correoUser = ((Admin) user).getCorreo();
             tipoUser = "Admin";
         }
         if (user instanceof Trabajador){
@@ -352,7 +352,7 @@ public class Persistencia {
         }
         if (user instanceof Cliente){
             nombreUser = ((Cliente) user).getNombre();
-            correoUser = ((Cliente) user).getEmail();
+            correoUser = ((Cliente) user).getCorreo();
             tipoUser = "Cliente";
         }
         String lineaNueva = String.format("[Cierre de sesion]: %s;%s;%s;%s\n",nombreUser,correoUser,tipoUser,fechaActual);
@@ -402,7 +402,7 @@ public class Persistencia {
         if (!directorio.exists()) directorio.mkdirs();
         String fechaActual = String.valueOf(LocalDateTime.now());
         String lineaNueva = String.format("[Nuevo Pedido]: %s;%s;%s;%s\n",nuevoPedido.getId(), cliente.getNombre(),
-                cliente.getEmail(),fechaActual);
+                cliente.getCorreo(),fechaActual);
         try(BufferedWriter bw = new BufferedWriter(new FileWriter(nombreDirectorio+"\\log.txt",true))){
             bw.write(lineaNueva);
         } catch (IOException e) {
@@ -661,7 +661,7 @@ public class Persistencia {
                 "</html>";
 
         String html = plantillaFactura.replace("{{cliente_nombre}}", cliente.getNombre())
-                .replace("{{cliente_email}}", cliente.getEmail())
+                .replace("{{cliente_email}}", cliente.getCorreo())
                 .replace("{{pedido_id}}", String.valueOf(nuevoPedido.getId()))
                 .replace("{{fecha_pedido}}", Utils.fechaAString(nuevoPedido.getFechaPedido()))
                 .replace("{{fecha_entrega}}", Utils.fechaAString(nuevoPedido.getFechaEntregaEstimada()))
