@@ -13,4 +13,9 @@ public interface DaoClientes {
 
     boolean compruebaIdCliente(DAOManager dao, String id);
 
+    boolean addProductoCarrito(DAOManager dao, String idCliente, int idProducto, int cantidad);
+
+    boolean actualizarProductoCarrito(DAOManager dao, String idCliente, int idProducto, int cantidad);
+
+    boolean buscaProductoCarrito(DAOManager dao, String id, int idProducto);
 }

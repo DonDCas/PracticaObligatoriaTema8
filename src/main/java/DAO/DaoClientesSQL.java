@@ -67,4 +67,56 @@ public class DaoClientesSQL implements DaoClientes{
         }
     }
 
+    @Override
+    public boolean addProductoCarrito(DAOManager dao, String idCliente, int idProducto, int cantidad) {
+        String sentencia = "INSERT INTO carritos VALUES (?,?,?);";
+        try{
+            dao.open();
+            PreparedStatement ps = dao.getConn().prepareStatement(sentencia);
+            ps.setString(1, idCliente);
+            ps.setInt(2, idProducto);
+            ps.setInt(3, cantidad);
+            ps.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+
+    }
+
+    @Override
+    public boolean actualizarProductoCarrito(DAOManager dao, String idCliente, int idProducto, int cantidad) {
+        String sentencia = "UPDATE carritos " +
+                "SET cantidad = (cantidad+?) " +
+                "WHERE idCliente = ? AND idProducto=?;";
+        try{
+            dao.open();
+            PreparedStatement ps = dao.getConn().prepareStatement(sentencia);
+            ps.setInt(1,cantidad);
+            ps.setString(2,idCliente);
+            ps.setInt(3,idProducto);
+            ps.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean buscaProductoCarrito(DAOManager dao, String id, int idProducto) {
+        String sentencia = "SELECT * FROM carritos WHERE idCliente = ? AND idProducto = ?";
+        try{
+            dao.open();
+            PreparedStatement ps = dao.getConn().prepareStatement(sentencia);
+            ps.setString(1,id);
+            ps.setInt(2,idProducto);
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+        } catch (Exception e) {
+            return false;
+        }
+
+    }
+
+
 }

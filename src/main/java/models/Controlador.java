@@ -96,15 +96,10 @@ public class Controlador implements Serializable {
 
     //Metodo que comprueba que devuelve añade un producto al carro del cliente
     // en caso de que se encuentre la ID del producto
-    public boolean addProductoCarrito(Cliente cliente, int idProducto) {
-        Producto p = buscaProductoById(idProducto);
-        if (cliente == null) return false;
-        if (p == null) return false;
-        if(cliente.addProductoCarro(p)){
-            Persistencia.guardaDatosCliente(cliente);
-            return true;
-        }
-        return false;
+    //Añadimos un producto al carro y en caso de que el producto ya exista en el devuelve false
+    public boolean addProductoCarrito(Cliente cliente, int idProducto, int cantidad) {
+        if (cliente.existeProductoCarro(daoClientes, dao, idProducto)) return daoClientes.actualizarProductoCarrito(dao, cliente.getId(), idProducto, cantidad);
+        return daoClientes.addProductoCarrito(dao, cliente.getId(), idProducto,cantidad);
     }
 
     //Busca un producto por la ID y devuelve Null en caso de que no exista
@@ -809,6 +804,10 @@ public class Controlador implements Serializable {
 
     public void modificaModoInvitado(String nuevoModoInvitado) {
         Persistencia.modificaModoInvitado(nuevoModoInvitado);
+    }
+
+    public boolean existeProductoCarroCliente(Cliente cliente, int id) {
+        return cliente.existeProductoCarro(daoClientes, dao, id);
     }
 
    /* public void modificaRuta(String rutaAModificadar, String nuevaRuta) {

@@ -1,5 +1,8 @@
 package models;
 
+import DAO.DAOManager;
+import DAO.DaoClientesSQL;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -97,13 +100,6 @@ public class Cliente extends Usuario implements Serializable {
 
     //Otros metodos
 
-    //Añadimos un producto al carro y en caso de que el producto ya exista en el devuelve false
-    public boolean addProductoCarro(Producto producto) {
-        if (existeProductoCarro(producto.getId())) return false;
-        carro.add(producto);
-        return true;
-    }
-
     //Metodo que busca en el carro un producto mediante su ID y si existe lo retira de la lista
     public boolean quitaProductoCarro(int idProducto) {
         for(Producto p :carro){
@@ -141,9 +137,8 @@ public class Cliente extends Usuario implements Serializable {
 
     public float precioCarroConIVA(int IVA){return precioCarroSinIva() + precioIVACarro(IVA);}
 
-    public boolean existeProductoCarro(int idProducto){
-        for(Producto p : carro) if (p.getId() == idProducto) return true;
-        return false;
+    public boolean existeProductoCarro(DaoClientesSQL daoCliente, DAOManager dao, int idProducto){
+        return daoCliente.buscaProductoCarrito(dao, id, idProducto);
     }
 
     public int cuentaPedidosPendientes() {

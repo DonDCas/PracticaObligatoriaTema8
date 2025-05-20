@@ -1357,17 +1357,37 @@ public class Main {
         int cantidad = -1;
         String termino = pedirPorTeclado("¿Qué deseas añadir al carrito?: ");
         do{
-            idProducto = mostrarCatalogoPorTermino(controlador, termino);
-            if (idProducto == -1) idProducto = -2;
             if(idProducto==-2 && pedirPorTecladoSN("¿Añadir un nuevo termino? (S/N): ").equalsIgnoreCase("s"))
                 termino = pedirPorTeclado("¿Qué deseas añadir al carrito?: ");
             else idProducto = -1;
+            idProducto = mostrarCatalogoPorTermino(controlador, termino);
+            if (idProducto == -1) idProducto = -2;
         }while (idProducto==-2 && pedirPorTecladoSN("¿Volver a buscar? (S/N): ").equalsIgnoreCase("s"));
         if(idProducto != -2){
             Producto productoBuscado = controlador.buscaProductoById(idProducto);
-            if(productoBuscado == null) Utils.pulsaEnter("Producto no encontrado");
+            if (controlador.existeProductoCarroCliente(user, productoBuscado.getId())){
+                if (pedirPorTecladoSN("El producto ya existe en el carrito. ¿Quieres pedir una mayor cantidad? (S/N): ").
+                        equalsIgnoreCase("s")){
+                    do{
+                        try{
+                            cantidad = Integer.parseInt(pedirPorTeclado("Introduce la cantidad deseada(mínimo=1): "));
+                        } catch (NumberFormatException e) {
+                            Utils.pulsaEnter("Se introdujo mal la cantidad deseada.");
+                        }
+                    } while (cantidad<1);
+                }else productoBuscado=null;
+            }else{
+                do{
+                    try{
+                        cantidad = Integer.parseInt(pedirPorTeclado("Introduce la cantidad deseada(mínimo=1): "));
+                    } catch (NumberFormatException e) {
+                        Utils.pulsaEnter("Se introdujo mal la cantidad deseada.");
+                    }
+                } while (cantidad<1);
+            }
+            if(productoBuscado == null) Utils.pulsaEnter("Producto no añadido");
             else{
-                Utils.pulsaEnter(controlador.addProductoCarrito(user, idProducto)
+                Utils.pulsaEnter(controlador.addProductoCarrito(user, idProducto, cantidad)
                         ? "El Producto se añadido al carro"
                         : "Hubo un problema para añadir el producto al carro");
             }
