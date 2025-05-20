@@ -1,5 +1,6 @@
 package DAO;
 
+import com.mysql.cj.xdevapi.PreparableStatement;
 import models.Cliente;
 
 import java.sql.PreparedStatement;
@@ -115,6 +116,54 @@ public class DaoClientesSQL implements DaoClientes{
         } catch (Exception e) {
             return false;
         }
+
+    }
+
+    @Override
+    public Integer devuelveCantidadProductoCarrito(DAOManager dao, String idCliente, int idProducto) {
+        String sentencia = "SELECT cantidad " +
+                "FROM carritos " +
+                "WHERE idCliente = ? AND idProducto = ?;";
+        try{
+            dao.open();
+            PreparedStatement ps = dao.getConn().prepareStatement(sentencia);
+            ps.setString(1,idCliente);
+            ps.setInt(2,idProducto);
+            ResultSet rs = ps.executeQuery();
+            rs.next();
+            return rs.getInt("cantidad");
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    @Override
+    public boolean quitarProductosCarrito(DAOManager dao, String idCliente,
+                                          int idProducto, int cantidadAEliminar,int cantidadActual) {
+        String sentencia = "";
+        try{
+            dao.open();
+            PreparedStatement stmt;
+            if (cantidadAEliminar == 0 || cantidadActual == cantidadAEliminar){
+                sentencia = "DELETE FROM carritos WHERE idCliente = ? AND idProducto = ?";
+                stmt = dao.getConn().prepareStatement(sentencia);
+                stmt.setString(1,idCliente);
+                stmt.setInt(2,idProducto);
+            }else {
+                sentencia = "UPDATE carritos " +
+                        "set cantidad = (cantidad - ?) " +
+                        "WHERE idCliente = ? AND idProducto = ? ";
+                stmt = dao.getConn().prepareStatement(sentencia);
+                stmt.setInt(1,cantidadAEliminar);
+                stmt.setString(2,idCliente);
+                stmt.setInt(3,idProducto);
+            }
+            stmt.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+
 
     }
 

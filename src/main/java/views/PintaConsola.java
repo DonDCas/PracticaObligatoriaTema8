@@ -2,6 +2,7 @@ package views;
 
 import data.DataIVA;
 import models.*;
+import org.apache.commons.collections4.map.HashedMap;
 import utils.Utils;
 
 import java.util.ArrayList;
@@ -601,9 +602,9 @@ public class PintaConsola {
         }while(!respuestaSN.equalsIgnoreCase("s") && !respuestaSN.equalsIgnoreCase("n"));
         return respuestaSN;
     }
-    public static void pintaProductoResumen(Producto producto) {
-        System.out.printf("║ ID: %d - %15s - %-25s - Precio: %-7.2f    ║\n",producto.getId(),producto.getMarca(),
-                producto.getModelo(),producto.getPrecio());
+    public static void pintaProductoResumen(Producto producto, int cantidad) {
+        System.out.printf("║ ID: %-6d - %-14s - %-25s - Precio: %-7.2f x%-2d ║\n",producto.getId(),producto.getMarca(),
+                producto.getModelo(),producto.getPrecio(),cantidad);
     }
 
     public static void pintaPedidoParaCliente(Pedido pedidoBuscado, Cliente cliente) {
@@ -662,25 +663,30 @@ public class PintaConsola {
         System.out.printf("╚═════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n");
     }
 
-    public static void pintaCarroCliente(ArrayList<Producto> carro) {
+    public static void pintaCarroClienteResumido(ArrayList<Producto> carro,
+                                         HashedMap<Integer, Integer> productosCantidad) {
         int cont = 1;
         System.out.printf("""
-                ╔══════════════════════════════════════════════════════════════════════════════╗
-                ║                            Productos del Carrito                             ║
-                ╠══════════════════════════════════════════════════════════════════════════════╣
+                ╔════════════════════════════════════════════════════════════════════════════════════╗
+                ║                                Productos del Carrito                               ║
+                ╠════════════════════════════════════════════════════════════════════════════════════╣
                 """);
         for(Producto producto : carro){
             System.out.printf("""
-                    ║ %3d .- %10s - %-30s - Precio(Sin IVA): %6.2f ║
+                    ║ %3d .- %13s - %-30s - Precio(Sin IVA): %6.2f x%-4d ║
                     """, cont, producto.getMarca(),
-                    producto.getModelo(),producto.getPrecio());
+                    producto.getModelo(),producto.getPrecio(),
+                    productosCantidad.get(producto.getId()));
             cont++;
         }
-        System.out.printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
+        System.out.printf("╚══════════════════════════════════════════════════════════════════════════════════╝\n");
 
     }
 
-    public static void pintaCarroCliente(ArrayList<Producto> carro, Cliente user) {
+    public static void pintaCarroCliente(Cliente user, ArrayList<Producto> carro,
+                                         HashedMap<Integer, Integer> productosCantidad) {
+        int cantidadTotalProductos = 0;
+        for(Producto p : carro) cantidadTotalProductos+=productosCantidad.get(p.getId());
         System.out.printf("""
                 ╔══════════════════════════════════════════════════════════════════════════════╗
                 ║                            Productos del Carrito                             ║
@@ -688,17 +694,17 @@ public class PintaConsola {
                 ║ Tu carrito contiene %-2d                                                       ║
                 ║ Productos:                                                                   ║
                 ║——————————————————————————————————————————————————————————————————————————————║
-                """,user.numProductosCarro());
-            for(Producto p : carro){
-                PintaConsola.pintaProductoResumen(p);
-            }
+                """,cantidadTotalProductos);
+            for(Producto p : carro) PintaConsola.pintaProductoResumen(p,productosCantidad.get(p.getId()));
         System.out.printf("""
                 ║——————————————————————————————————————————————————————————————————————————————║
                 ║ El precio total del pedido sera de:   %7.2f e                              ║
                 ║ Se le añadira un IVA de:              %7.2f e                              ║
                 ║ El precio total con IVA es de:        %7.2f e                              ║
                 ╚══════════════════════════════════════════════════════════════════════════════╝
-                """, user.precioCarroSinIva(), user.precioIVACarro(DataIVA.IVA), user.precioCarroConIVA(DataIVA.IVA));
+                """, user.precioCarroSinIva(carro, productosCantidad),
+                user.precioIVACarro(carro, productosCantidad, DataIVA.IVA),
+                user.precioCarroConIVA(carro, productosCantidad, DataIVA.IVA));
     }
 
     public static void ultimasSesiones(Controlador controlador) {

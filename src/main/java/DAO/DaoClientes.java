@@ -18,4 +18,8 @@ public interface DaoClientes {
     boolean actualizarProductoCarrito(DAOManager dao, String idCliente, int idProducto, int cantidad);
 
     boolean buscaProductoCarrito(DAOManager dao, String id, int idProducto);
+
+    Integer devuelveCantidadProductoCarrito(DAOManager dao, String idCliente, int idProducto);
+
+    boolean quitarProductosCarrito(DAOManager dao, String id, int id1, int cantidadAEliminar, int cantidadActual);
 }

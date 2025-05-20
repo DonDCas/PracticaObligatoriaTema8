@@ -2,6 +2,7 @@ package views;
 
 import data.DataIVA;
 import models.*;
+import org.apache.commons.collections4.map.HashedMap;
 import utils.Utils;
 
 import java.util.ArrayList;
@@ -195,7 +196,9 @@ public class Menu {
         """);
     }
 
-    public static void realizarPedido(Cliente cliente) {
+    public static void realizarPedido(ArrayList<Producto> carro, HashedMap<Integer, Integer> cantidadProductos) {
+        int totalProductos = 0;
+        for(Producto p : carro) totalProductos += cantidadProductos.get(p.getId());
         System.out.printf("""
                 ╔══════════════════════════════════════════════════════╗
                 ║  Realizando pedido.                                  ║
@@ -211,7 +214,7 @@ public class Menu {
                 ║ 7- Salir (Se guardará el carrito hasta que vuelvas). ║
                 ╚══════════════════════════════════════════════════════╝
                 
-                """, cliente.numProductosCarro());
+                """, totalProductos);
     }
 
 
@@ -241,7 +244,7 @@ public class Menu {
         System.out.println("*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*");
         System.out.println("Productos: ");
         for (Producto p :pedidoBuscado.getProductos()){
-            PintaConsola.pintaProductoResumen(p);
+            //PintaConsola.pintaProductoResumen(p);
         }
         System.out.println("\n*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*");
         System.out.printf("\nEl Precio total (sin IVA) es: \t \t \t\t\t\t\t\t %5.2f e\n", pedidoBuscado.calculaTotalPedidoSinIVA());

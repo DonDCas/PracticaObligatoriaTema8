@@ -3,9 +3,6 @@ package models;
 import Communications.Email;
 import Communications.Telegram;
 import DAO.*;
-import data.DataAdmin;
-import data.DataClientes;
-import data.DataProductos;
 import data.DataTrabajadores;
 import persistencia.Persistencia;
 import utils.Utils;
@@ -554,12 +551,9 @@ public class Controlador implements Serializable {
     }
 
     //Metodo que devuelve si se ha podido borrar o no un producto del carrito de un cliente
-    public boolean borrarProductoCarrito(Cliente cliente, Producto productoBuscado) {
-        if (cliente.quitaProductoCarro(productoBuscado.getId())){
-           Persistencia.guardaDatosCliente(cliente);
-            return true;
-        }
-    return false;
+    public boolean borrarProductoCarrito(Cliente cliente, Producto productoBuscado,
+                                         int cantidadAEliminar, int cantidadActual) {
+        return daoClientes.quitarProductosCarrito(dao,cliente.getId(),productoBuscado.getId(), cantidadAEliminar,cantidadActual);
     }
 
 
@@ -808,6 +802,14 @@ public class Controlador implements Serializable {
 
     public boolean existeProductoCarroCliente(Cliente cliente, int id) {
         return cliente.existeProductoCarro(daoClientes, dao, id);
+    }
+
+    public ArrayList<Producto> actualizarCarritoCliente(Cliente user) {
+        return daoProductos.recuperaProductosCarrito(dao, user.getId());
+    }
+
+    public Integer devuelveCantidadProductoCarrito(Cliente user, int id) {
+        return daoClientes.devuelveCantidadProductoCarrito(dao, user.getId(), id);
     }
 
    /* public void modificaRuta(String rutaAModificadar, String nuevaRuta) {

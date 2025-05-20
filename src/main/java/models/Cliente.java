@@ -2,6 +2,7 @@ package models;
 
 import DAO.DAOManager;
 import DAO.DaoClientesSQL;
+import org.apache.commons.collections4.map.HashedMap;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -125,17 +126,19 @@ public class Cliente extends Usuario implements Serializable {
         vaciaCarro();
     }
 
-    public float precioCarroSinIva(){
+    public float precioCarroSinIva(ArrayList<Producto> carro, HashedMap<Integer, Integer> productosCantidad){
         float precioFinal = 0;
         for(Producto p : carro){
-            precioFinal += p.getPrecio();
+            precioFinal += (p.getPrecio() * productosCantidad.get(p.getId()));
         }
         return precioFinal;
     }
 
-    public float precioIVACarro(int IVA){return precioCarroSinIva() * (IVA/100f);}
+    public float precioIVACarro(ArrayList<Producto> carro, HashedMap<Integer, Integer> productosCantidad, int IVA){
+        return precioCarroSinIva(carro, productosCantidad) * (IVA/100f);}
 
-    public float precioCarroConIVA(int IVA){return precioCarroSinIva() + precioIVACarro(IVA);}
+    public float precioCarroConIVA(ArrayList<Producto> carro, HashedMap<Integer, Integer> productosCantidad, int IVA){
+        return precioCarroSinIva(carro, productosCantidad) + precioIVACarro(carro, productosCantidad, IVA);}
 
     public boolean existeProductoCarro(DaoClientesSQL daoCliente, DAOManager dao, int idProducto){
         return daoCliente.buscaProductoCarrito(dao, id, idProducto);

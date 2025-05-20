@@ -1,5 +1,6 @@
 import Communications.Email;
 import models.*;
+import org.apache.commons.collections4.map.HashedMap;
 import persistencia.Persistencia;
 import utils.Utils;
 import views.Menu;
@@ -1320,9 +1321,12 @@ public class Main {
     private static void menuRealizarPedido(Controlador controlador, Cliente user) {
         int opMenuPedido = -1;
         do{
+            ArrayList<Producto> carro = controlador.actualizarCarritoCliente(user);
+            HashedMap<Integer, Integer> cantidadProductos = new HashedMap<>();
+            for(Producto p : carro) cantidadProductos.put(p.getId(), controlador.devuelveCantidadProductoCarrito(user,p.getId()));
             opMenuPedido = -1;
             Utils.limpiarPantalla();
-            Menu.realizarPedido(user);
+            Menu.realizarPedido(carro, cantidadProductos);
             try{
                 opMenuPedido = Integer.parseInt(pedirPorTeclado("Introduce la opción deseada: "));
             } catch (NumberFormatException e){
@@ -1330,9 +1334,9 @@ public class Main {
             }
             switch (opMenuPedido){
                 case 1-> menuMostrarCatalogo(controlador); // Esta opción le da al cliente la opción de ver los productos
-                case 2-> mostrarCarrito(controlador, user); //Esta opción le da al cliente la opción de ver su carrito
+                case 2-> mostrarCarrito(user, carro, cantidadProductos); //Esta opción le da al cliente la opción de ver su carrito
                 case 3-> addProductoCarro(controlador, user);//Esta opción añadira un producto mediante la ID que introduzca el cliente
-                case 4-> deleteProductoCarro(controlador,user); //Esta opción le pide un id de un producto al cliente y si esta en el carro lo elimina
+                case 4-> deleteProductoCarro(controlador,user,carro, cantidadProductos); //Esta opción le pide un id de un producto al cliente y si esta en el carro lo elimina
                 case 5-> confirmaPedido(controlador,user); //Esta opción finaliza el pedido
                 case 6-> cancelarPedido(controlador,user); //Esta opción borra el carrito si el cliente lo decide
             }
@@ -1340,13 +1344,12 @@ public class Main {
     }
 
     //Función para mostrar el carrito de un cliente
-    private static void mostrarCarrito(Controlador controlador, Cliente user) {
+    private static void mostrarCarrito(Cliente user, ArrayList<Producto> carro, HashedMap<Integer, Integer> cantidadProductos) {
         Utils.limpiarPantalla();
-        ArrayList<Producto> carro = user.getCarro();
         if (carro.isEmpty()) Utils.pulsaEnter("Todavia no hay productos en el carro");
         else{
             System.out.println("Aquí esta tu carrito. ");
-            PintaConsola.pintaCarroCliente(carro, user);
+            PintaConsola.pintaCarroCliente(user, carro, cantidadProductos);
             Utils.pulsaEnter();
         }
     }
@@ -1395,29 +1398,58 @@ public class Main {
     }
 
     //Pide al usuario un id de un producto y en caso de que exista en el carrito lo elimina de este
-    private static void deleteProductoCarro(Controlador controlador, Cliente user) {
+    private static void deleteProductoCarro(Controlador controlador, Cliente user,
+                                            ArrayList<Producto> carro,
+                                            HashedMap<Integer, Integer> cantidadProductos) {
         int op = -1;
-        ArrayList<Producto> carro = user.getCarro();
-        // TODO Añadir menu de seleecion mostrando el carrito
-        do{
-            PintaConsola.pintaCarroCliente(carro);
-            try{
-                op = Integer.parseInt(pedirPorTeclado("Indica el producto que deseas eliminar (introduce 0 para salir): "));
-            } catch (NumberFormatException e) {
-                System.out.println("El numero introducido es incorrecto");
-            }
+        if (carro.size()<1)
+            Utils.pulsaEnter("No hay productos en el carrito");
+        else {
+            System.out.println("Por favor, introduzca el numero que indica el producto que desea eliminar.");
+            do{
+                PintaConsola.pintaCarroClienteResumido(carro,cantidadProductos);
+                try{
+                    op = Integer.parseInt(pedirPorTeclado("Indica el producto que deseas eliminar (introduce 0 para salir): "));
+                } catch (NumberFormatException e) {
+                    System.out.println("Por favor, introduzca un número.");
+                }
 
-        }while (op == -1);
-        if (op != 0){
-            int id = carro.get(op-1).getId();
-            Producto productoBuscado = controlador.buscaProductoById(id);
-            if(productoBuscado == null) Utils.pulsaEnter("Producto no encontrado");
-            else{
-                PintaConsola.pintaProductoCatalogo(productoBuscado);
-                if(pedirPorTecladoSN("¿Este es el producto que deseas eliminar del carrito? (S/N): ").equalsIgnoreCase("s"))
-                    System.out.println(controlador.borrarProductoCarrito(user, productoBuscado)
-                            ? "Producto Eliminado con exito"
-                            : "No se encontro el producto en su carrito");
+            }while (op == -1);
+            if (op != 0){
+                int id = carro.get(op-1).getId();
+                Producto productoBuscado = controlador.buscaProductoById(id);
+                if(productoBuscado == null) Utils.pulsaEnter("Producto no encontrado");
+                else{
+                    PintaConsola.pintaProductoCatalogo(productoBuscado);
+                    if(pedirPorTecladoSN("¿Este es el producto que deseas eliminar del carrito? (S/N): ").equalsIgnoreCase("s")){
+                        int cantidadAEliminar = -1;
+                        System.out.printf("De este producto hay %d cantidad.\n", cantidadProductos.get(productoBuscado.getId()));
+                        do{
+                            try{
+                                cantidadAEliminar = Integer.parseInt(pedirPorTeclado("¿Cuantos quieres eliminar? (Introduce 0 para eliminarlo completamente)"));
+                            } catch (NumberFormatException e) {
+                                System.out.println("No se introdujo un número.");
+                            }
+                            if(cantidadAEliminar>cantidadProductos.get(productoBuscado.getId())){
+                                Utils.pulsaEnter("Se ha introducido una cantidad mayor a la existente.");
+                                cantidadAEliminar=-1;
+                            }
+                            if (cantidadAEliminar<0) Utils.pulsaEnter("Cantidad incorrecta a introducir.");
+                        }while (cantidadAEliminar<0);
+                        if (controlador.borrarProductoCarrito(user, productoBuscado,
+                                cantidadAEliminar, cantidadProductos.get(productoBuscado.getId()))){
+                            if (cantidadAEliminar != 0 || cantidadAEliminar == cantidadProductos.get(productoBuscado.getId())){
+                                cantidadProductos.remove(productoBuscado.getId());
+                                System.out.println("Producto eliminado con existo.");
+                            }else{
+                                cantidadProductos.replace(productoBuscado.getId(),
+                                        (cantidadProductos.get(productoBuscado.getId()-cantidadAEliminar)));
+                                System.out.println("Producto del carrito actualizado.");
+                            }
+                        }else System.out.println("No se encontro el producto en su carrito");
+                        Utils.pulsaEnter();
+                    }
+                }
             }
         }
     }
@@ -1426,7 +1458,7 @@ public class Main {
     private static void confirmaPedido(Controlador controlador, Cliente user) {
         if (user.getCarro().size()>0){
             System.out.println("Este es su carrito actual:");
-            PintaConsola.pintaCarroCliente(user.getCarro(), user);
+            //PintaConsola.pintaCarroCliente(user, user.getCarro(), user);
             String respuesta = "";
             if (pedirPorTecladoSN("¿Si desea confirmar el pedido? (S/N): ").equalsIgnoreCase("s")){
                 Utils.pulsaEnter(controlador.confirmaPedidoCliente(user.getId())
@@ -1443,7 +1475,7 @@ public class Main {
     private static void cancelarPedido(Controlador controlador, Cliente user) {
         if (user.getCarro().size()>0){
             System.out.println("Este es su carrito actual:");
-            PintaConsola.pintaCarroCliente(user.getCarro(), user);
+            //PintaConsola.pintaCarroCliente(user, user.getCarro(), user);
             String respuesta = "";
             if (pedirPorTecladoSN("¿Desea borrar el pedido? (S/N)").equalsIgnoreCase("s")){
                 Utils.pulsaEnter(controlador.borrarCarritoCliente(user)
