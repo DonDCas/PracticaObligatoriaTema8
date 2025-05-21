@@ -2,10 +2,10 @@ package views;
 
 import data.DataIVA;
 import models.*;
-import org.apache.commons.collections4.map.HashedMap;
 import utils.Utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 public class Menu {
@@ -196,7 +196,7 @@ public class Menu {
         """);
     }
 
-    public static void realizarPedido(ArrayList<Producto> carro, HashedMap<Integer, Integer> cantidadProductos) {
+    public static void realizarPedido(ArrayList<Producto> carro, HashMap<Integer, Integer> cantidadProductos) {
         int totalProductos = 0;
         for(Producto p : carro) totalProductos += cantidadProductos.get(p.getId());
         System.out.printf("""

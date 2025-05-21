@@ -2,10 +2,11 @@ package models;
 
 import DAO.DAOManager;
 import DAO.DaoClientesSQL;
-import org.apache.commons.collections4.map.HashedMap;
+import DAO.DaoPedidosSQL;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Cliente extends Usuario implements Serializable {
 
@@ -15,7 +16,6 @@ public class Cliente extends Usuario implements Serializable {
     private String token;
     private boolean correoValidado;
     private ArrayList<Pedido> pedidos;
-    private ArrayList<Producto> carro;
 
     // Constructor
     public Cliente(String id, String email, String clave, String nombre, String localidad,
@@ -27,7 +27,6 @@ public class Cliente extends Usuario implements Serializable {
         this.token = token;
         this.correoValidado = correoValidado;
         pedidos = new ArrayList<>();
-        carro = new ArrayList<>();
     }
 
     public Cliente(Cliente cliente) {
@@ -38,7 +37,6 @@ public class Cliente extends Usuario implements Serializable {
         token = cliente.getToken();
         correoValidado = cliente.isCorreoValidado();
         pedidos = new ArrayList<>(cliente.getPedidos());
-        carro = new ArrayList<>(cliente.getCarro());
     }
 
     // Getter y Setter
@@ -91,42 +89,24 @@ public class Cliente extends Usuario implements Serializable {
         this.pedidos = pedidos;
     }
 
-    public ArrayList<Producto> getCarro() {
-        return carro;
-    }
-
-    public void setCarro(ArrayList<Producto> carro) {
-        this.carro = carro;
-    }
-
     //Otros metodos
 
     //Metodo que busca en el carro un producto mediante su ID y si existe lo retira de la lista
-    public boolean quitaProductoCarro(int idProducto) {
-        for(Producto p :carro){
-            if (p.getId() == idProducto){
-                carro.remove(p);
-                return true;
-            }
-        }
-        return false;
+    public boolean quitaProductoCarro(DAOManager dao, DaoClientesSQL daoClientes,
+                                      int idProducto, int cantidadAEliminar, int cantidadActual) {
+        return daoClientes.quitarProductosCarrito(dao, id, idProducto, cantidadAEliminar, cantidadActual);
     }
 
-    //Metodo que devuelve el tamaño del carro del cliente.
-    public int numProductosCarro() {
-        return carro.size();
-    }
-
-    public void vaciaCarro() {
-        carro.clear();
+    public boolean vaciaCarro(DAOManager dao, DaoClientesSQL daoClientes) {
+        return daoClientes.vaciaCarro(dao, id);
     }
 
     public void addPedido(Pedido pedido){
         pedidos.add(pedido);
-        vaciaCarro();
+        //vaciaCarro();
     }
 
-    public float precioCarroSinIva(ArrayList<Producto> carro, HashedMap<Integer, Integer> productosCantidad){
+    public float precioCarroSinIva(ArrayList<Producto> carro, HashMap<Integer, Integer> productosCantidad){
         float precioFinal = 0;
         for(Producto p : carro){
             precioFinal += (p.getPrecio() * productosCantidad.get(p.getId()));
@@ -134,19 +114,19 @@ public class Cliente extends Usuario implements Serializable {
         return precioFinal;
     }
 
-    public float precioIVACarro(ArrayList<Producto> carro, HashedMap<Integer, Integer> productosCantidad, int IVA){
+    public float precioIVACarro(ArrayList<Producto> carro, HashMap<Integer, Integer> productosCantidad, int IVA){
         return precioCarroSinIva(carro, productosCantidad) * (IVA/100f);}
 
-    public float precioCarroConIVA(ArrayList<Producto> carro, HashedMap<Integer, Integer> productosCantidad, int IVA){
+    public float precioCarroConIVA(ArrayList<Producto> carro, HashMap<Integer, Integer> productosCantidad, int IVA){
         return precioCarroSinIva(carro, productosCantidad) + precioIVACarro(carro, productosCantidad, IVA);}
 
     public boolean existeProductoCarro(DaoClientesSQL daoCliente, DAOManager dao, int idProducto){
         return daoCliente.buscaProductoCarrito(dao, id, idProducto);
     }
 
-    public int cuentaPedidosPendientes() {
+    public int cuentaPedidosPendientes(DAOManager dao, DaoPedidosSQL daoPedidos) {
         int cont = 0;
-        for(Pedido p : pedidos){
+        for(Pedido p : daoPedidos.readByidCliente(dao, id)){
             if (p.getEstado() <= 2) cont++;
         }
         return cont;

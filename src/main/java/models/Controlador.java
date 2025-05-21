@@ -19,6 +19,8 @@ public class Controlador implements Serializable {
     private DaoProductosSQL daoProductos;
     private DaoAdminsSQL daoAdmin;
     private DaoClientesSQL daoClientes;
+    private DaoTrabajadorSQL daoTrabajador;
+    private DaoPedidosSQL daoPedidos;
     ArrayList<Trabajador> trabajadores;
     HashMap<String,Cliente> pedidoCliente;
 
@@ -29,6 +31,8 @@ public class Controlador implements Serializable {
         daoProductos = new DaoProductosSQL();
         daoAdmin = new DaoAdminsSQL();
         daoClientes = new DaoClientesSQL();
+        daoTrabajador = new DaoTrabajadorSQL();
+        daoPedidos = new DaoPedidosSQL();
         this.trabajadores = new ArrayList<>();
         pedidoCliente = new HashMap<>();
     }
@@ -105,28 +109,24 @@ public class Controlador implements Serializable {
     }
 
     // Metodo que crea un pedido, lo añade a la lista de pedidos del cliente e inicia la asignación a un trabajador
-    public boolean confirmaPedidoCliente(String idCliente) {
-        Cliente cliente = buscaClienteById(idCliente);
+    public boolean confirmaPedidoCliente(Cliente cliente, ArrayList<Producto> carro,
+                                         HashMap<Integer, Integer> cantidadProductos) {
         if (cliente == null) return false;
-        if (cliente.getCarro().isEmpty()) return false;
-        ArrayList<Producto> productos = new ArrayList<>();
-        for (Producto producto : cliente.getCarro()){
-            productos.add(new Producto(producto));
+        if (carro.isEmpty()) return false;
+        String idPedido = generaIdPedido();
+        if (daoPedidos.clienteRealizaPedido(dao, cliente.getId(), idPedido)){
+            if(daoPedidos.insertarLineasPedidos(dao, idPedido, carro, cantidadProductos)){
+                Trabajador trabajadorCandidato = buscaTrabajadorCandidatoParaAsignar();
+                if (trabajadorCandidato != null) asignaPedido(idPedido, trabajadorCandidato.getId());
+                return true;
+            }
         }
-        Pedido nuevoPedido = new Pedido(generaIdPedido(), productos);
-        cliente.addPedido(nuevoPedido);
-        Persistencia.guardaDatosCliente(cliente);
-        Persistencia.creaFacturaPDF(cliente,nuevoPedido);
-        pedidoCliente.put(nuevoPedido.getId(),cliente);
-        Persistencia.guardaDatosMapas(pedidoCliente);
-        Persistencia.registraLogNuevoPedido(cliente, nuevoPedido);
-        Trabajador trabajadorCandidato = buscaTrabajadorCandidatoParaAsignar();
-        if (trabajadorCandidato != null) return asignaPedido(nuevoPedido.getId(), trabajadorCandidato.getId());
-        return true;
+        daoPedidos.borrarPedidoById(dao, idPedido);
+        return false;
     }
 
     public Trabajador buscaTrabajadorCandidatoParaAsignar() {
-        Trabajador trabajadorCandidato = null;
+        Trabajador trabajadorCandidato = buscaTrabajadorByID(daoTrabajador.buscaTrabajadorParaAsignar(dao));
         for(Trabajador trabajador : trabajadores){
             if (!trabajador.isBaja()){
                 if (trabajadorCandidato == null) trabajadorCandidato = trabajador;
@@ -230,8 +230,7 @@ public class Controlador implements Serializable {
     }
 
     public Pedido buscaPedidoById(String idPedido) {
-        for (Cliente c : daoUsuarios.readAllClientes(dao))for(Pedido p : c.getPedidos()) if (p.getId().equalsIgnoreCase(idPedido)) return p;
-        return null;
+        return daoPedidos.readById(dao, idPedido);
     }
 
     public boolean cambiaEstadoPedido(String idPedido, int nuevoEstado) {
@@ -297,6 +296,7 @@ public class Controlador implements Serializable {
     }
 
     public boolean asignaPedido(String idPedido, String idTrabajador) {
+        daoTrabajador.asignarPedido(dao, idTrabajador, idPedido);
         Pedido pedido = buscaPedidoById(idPedido);
         Cliente cliente = pedidoCliente.get(idPedido);
         if (pedido == null) return false;
@@ -390,21 +390,18 @@ public class Controlador implements Serializable {
     //Genera un id para los pedidos
     public String generaIdPedido() {
         boolean existeID = false;
-        int id = -1;
+        String id = "";
+        Pedido pedidoBuscado = null;
         do{
             existeID = false;
             //Generamos un numero de ID de forma aleatoria entre 1 y 100000 + la cantidad de pedidos totales
-            id = Utils.numAleatorio100(1,100000+numPedidosTotales());
+            id = "P" + Utils.numAleatorio100(1,100000+numPedidosTotales());
             //Comprobamos que la ID no existe buscandola entre todos los clientes y todos los pedidos de cada cliente
-            for(Cliente c : daoUsuarios.readAllClientes(dao)){
-                for(Pedido p : c.getPedidos()){
-                    int idRegistrada = Integer.parseInt(p.getId().substring(1));
-                    // Si encontramos coincidencia levantamos bandera y tendremos que volver a empezar el proceso
-                    if (idRegistrada == id) existeID = true;
-                }
-            }
+            pedidoBuscado = daoPedidos.readById(dao, id);
+            if (pedidoBuscado != null) existeID = true;
+            else return id;
         }while (existeID);
-        return "P"+String.valueOf(id);
+        return id;
     }
 
     public int generaIdAdmin() {
@@ -480,7 +477,7 @@ public class Controlador implements Serializable {
 
     //Metodo que devuelve la cantidad de pedidos en que no estan ni cancelados ni completados de un cliente.
     public int cuentaPedidosPendientesCliente(Cliente cliente) {
-        return cliente.cuentaPedidosPendientes();
+        return cliente.cuentaPedidosPendientes(dao, daoPedidos);
     }
 
     //Metodo que dependiendo del numero de op cambiara un dato de Cliente
@@ -536,24 +533,20 @@ public class Controlador implements Serializable {
         cliente.setProvincia(clienteCopia.getProvincia());
         cliente.setToken(clienteCopia.getToken());
         cliente.setCorreoValidado(clienteCopia.isCorreoValidado());
-        cliente.setCarro(clienteCopia.getCarro());
         cliente.setPedidos(clienteCopia.getPedidos());
         return daoUsuarios.updateUsuario(dao, clienteCopia);
     }
 
     //Metodo que borra el carrito entero del cliente
     public boolean borrarCarritoCliente(Cliente cliente) {
-        if (!cliente.getCarro().isEmpty()){
-            cliente.vaciaCarro();
-            return true;
-        }
-        return false;
+        return cliente.vaciaCarro(dao, daoClientes);
     }
 
     //Metodo que devuelve si se ha podido borrar o no un producto del carrito de un cliente
     public boolean borrarProductoCarrito(Cliente cliente, Producto productoBuscado,
                                          int cantidadAEliminar, int cantidadActual) {
-        return daoClientes.quitarProductosCarrito(dao,cliente.getId(),productoBuscado.getId(), cantidadAEliminar,cantidadActual);
+        return cliente.quitaProductoCarro(dao,daoClientes,productoBuscado.getId(), cantidadAEliminar,cantidadActual);
+
     }
 
 
@@ -810,6 +803,10 @@ public class Controlador implements Serializable {
 
     public Integer devuelveCantidadProductoCarrito(Cliente user, int id) {
         return daoClientes.devuelveCantidadProductoCarrito(dao, user.getId(), id);
+    }
+
+    public ArrayList<Pedido> buscaPedidoByCliente(Cliente user) {
+        return daoPedidos.readByidCliente(dao, user.getId());
     }
 
    /* public void modificaRuta(String rutaAModificadar, String nuevaRuta) {

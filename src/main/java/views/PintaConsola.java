@@ -2,11 +2,11 @@ package views;
 
 import data.DataIVA;
 import models.*;
-import org.apache.commons.collections4.map.HashedMap;
 import utils.Utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class PintaConsola {
@@ -295,8 +295,9 @@ public class PintaConsola {
         localidadProvincia);
     }
 
-    public static void pintaDatosCliente(Cliente clienteExtendido) {
+    public static void pintaDatosCliente(Controlador controlador, Cliente clienteExtendido) {
         String localidadProvincia = String.format("%s - %s", clienteExtendido.getLocalidad(), clienteExtendido.getProvincia());
+        ArrayList<Pedido> pedidosCliente = controlador.buscaPedidoByCliente(clienteExtendido);
         System.out.printf("""
         ╔════════════════════════════════════════════════════════════════╗
         ║                      ID CLIENTE: %8s                      ║
@@ -318,8 +319,8 @@ public class PintaConsola {
 
         """, clienteExtendido.getId(),clienteExtendido.getNombre(),clienteExtendido.getCorreo(), clienteExtendido.getMovil(),
                 clienteExtendido.getDireccion(), localidadProvincia,
-                clienteExtendido.getPedidos().size(), clienteExtendido.cuentaPedidosPendientes(),
-                (clienteExtendido.getPedidos().size() - clienteExtendido.cuentaPedidosPendientes()));
+                pedidosCliente.size(), controlador.cuentaPedidosPendientesCliente(clienteExtendido),
+                (pedidosCliente.size() - controlador.cuentaPedidosPendientesCliente(clienteExtendido)));
     }
 
     public static String pintaResumenPedidos(ArrayList<Pedido> todoslosPedidos, ArrayList<PedidoClienteDataClass> datosClientes) {
@@ -664,12 +665,12 @@ public class PintaConsola {
     }
 
     public static void pintaCarroClienteResumido(ArrayList<Producto> carro,
-                                         HashedMap<Integer, Integer> productosCantidad) {
+                                         HashMap<Integer, Integer> productosCantidad) {
         int cont = 1;
         System.out.printf("""
-                ╔════════════════════════════════════════════════════════════════════════════════════╗
-                ║                                Productos del Carrito                               ║
-                ╠════════════════════════════════════════════════════════════════════════════════════╣
+                ╔═══════════════════════════════════════════════════════════════════════════════════════╗
+                ║                                  Productos del Carrito                                ║
+                ╠═══════════════════════════════════════════════════════════════════════════════════════╣
                 """);
         for(Producto producto : carro){
             System.out.printf("""
@@ -679,29 +680,29 @@ public class PintaConsola {
                     productosCantidad.get(producto.getId()));
             cont++;
         }
-        System.out.printf("╚══════════════════════════════════════════════════════════════════════════════════╝\n");
+        System.out.printf("╚══════════════════════════════════════════════════════════════════════════════════════╝\n");
 
     }
 
     public static void pintaCarroCliente(Cliente user, ArrayList<Producto> carro,
-                                         HashedMap<Integer, Integer> productosCantidad) {
+                                         HashMap<Integer, Integer> productosCantidad) {
         int cantidadTotalProductos = 0;
         for(Producto p : carro) cantidadTotalProductos+=productosCantidad.get(p.getId());
         System.out.printf("""
-                ╔══════════════════════════════════════════════════════════════════════════════╗
-                ║                            Productos del Carrito                             ║
-                ╠══════════════════════════════════════════════════════════════════════════════╣
-                ║ Tu carrito contiene %-2d                                                       ║
-                ║ Productos:                                                                   ║
-                ║——————————————————————————————————————————————————————————————————————————————║
+                ╔═══════════════════════════════════════════════════════════════════════════════╗
+                ║                             Productos del Carrito                             ║
+                ╠═══════════════════════════════════════════════════════════════════════════════╣
+                ║ Tu carrito contiene %-2d                                                        ║
+                ║ Productos:                                                                    ║
+                ║———————————————————————————————————————————————————————————————————————————————║
                 """,cantidadTotalProductos);
             for(Producto p : carro) PintaConsola.pintaProductoResumen(p,productosCantidad.get(p.getId()));
         System.out.printf("""
-                ║——————————————————————————————————————————————————————————————————————————————║
-                ║ El precio total del pedido sera de:   %7.2f e                              ║
-                ║ Se le añadira un IVA de:              %7.2f e                              ║
-                ║ El precio total con IVA es de:        %7.2f e                              ║
-                ╚══════════════════════════════════════════════════════════════════════════════╝
+                ║———————————————————————————————————————————————————————————————————————————————║
+                ║ El precio total del pedido sera de:   %7.2f e                               ║
+                ║ Se le añadira un IVA de:              %7.2f e                               ║
+                ║ El precio total con IVA es de:        %7.2f e                               ║
+                ╚═══════════════════════════════════════════════════════════════════════════════╝
                 """, user.precioCarroSinIva(carro, productosCantidad),
                 user.precioIVACarro(carro, productosCantidad, DataIVA.IVA),
                 user.precioCarroConIVA(carro, productosCantidad, DataIVA.IVA));

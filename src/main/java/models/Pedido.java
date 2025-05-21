@@ -3,25 +3,40 @@ package models;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Pedido implements Comparable<Pedido>, Serializable {
     private String id;
     private LocalDate fechaPedido;
     private LocalDate fechaEntregaEstimada;
-    private LocalDate deliveryDate;
     private int estado;
     private String comentario;
     private ArrayList<Producto> productos;
+    private HashMap<Integer,Integer> cantidadProductos;
 
     
     // Constructores
-    public Pedido(String id, ArrayList<Producto> productos) {
+
+
+    public Pedido(String id, LocalDate fechaPedido, LocalDate fechaEntregaEstimada, int estado,
+                  String comentario) {
+        this.id = id;
+        this.fechaPedido = fechaPedido;
+        this.fechaEntregaEstimada = fechaEntregaEstimada;
+        this.estado = estado;
+        this.comentario = comentario;
+        productos = new ArrayList<>();
+        cantidadProductos = new HashMap<>();
+    }
+
+    public Pedido(String id, ArrayList<Producto> productos, HashMap<Integer, Integer> cantidadProductos) {
         this.id = id;
         fechaPedido = LocalDate.now();
         fechaEntregaEstimada = LocalDate.now().plusDays(7);
         estado = 0;
         comentario = "Sin comentarios";
         this.productos = productos;
+        this.cantidadProductos = cantidadProductos;
     }
 
     public Pedido(Pedido pedido) {
@@ -57,14 +72,6 @@ public class Pedido implements Comparable<Pedido>, Serializable {
         this.fechaEntregaEstimada = fechaEntregaEstimada;
     }
 
-    public LocalDate getDeliveryDate() {
-        return deliveryDate;
-    }
-
-    public void setDeliveryDate(LocalDate deliveryDate) {
-        this.deliveryDate = deliveryDate;
-    }
-
     public int getEstado() {
         return estado;
     }
@@ -77,10 +84,6 @@ public class Pedido implements Comparable<Pedido>, Serializable {
         return comentario;
     }
 
-    public void setComentario(String comentario) {
-        this.comentario = comentario;
-    }
-
     public ArrayList<Producto> getProductos() {
          return productos;
     }
@@ -88,7 +91,15 @@ public class Pedido implements Comparable<Pedido>, Serializable {
     public void setProductos(ArrayList<Producto> productos) {
         this.productos = productos;
     }
-    
+
+    public void setCantidadProductos(HashMap<Integer, Integer> cantidadProductos) {
+        this.cantidadProductos = cantidadProductos;
+    }
+
+    public HashMap<Integer, Integer> getCantidadProductos() {
+        return cantidadProductos;
+    }
+
     //Otros Metodos
     
     public boolean cambiaEstado(int nuevoEstado){
@@ -138,17 +149,8 @@ public class Pedido implements Comparable<Pedido>, Serializable {
         return true;
     }
 
-    public boolean cambiaFechaDelivery(LocalDate nuevaFecha) {
-        if (nuevaFecha == null) return false;
-        if (nuevaFecha.isEqual(fechaPedido)) return false;
-        if (nuevaFecha.isBefore(fechaPedido)) return false;
-        deliveryDate = nuevaFecha;
-        return true;
-    }
-
     public boolean cambiaFechaEntregaCandelado() {
         fechaEntregaEstimada = null;
-        deliveryDate = null;
         return true;
     }
 }

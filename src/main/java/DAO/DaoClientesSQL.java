@@ -1,11 +1,10 @@
 package DAO;
 
-import com.mysql.cj.xdevapi.PreparableStatement;
+//import com.mysql.cj.xdevapi.PreparableStatement;
 import models.Cliente;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 
 public class DaoClientesSQL implements DaoClientes{
@@ -167,5 +166,20 @@ public class DaoClientesSQL implements DaoClientes{
 
     }
 
+    @Override
+    public boolean vaciaCarro(DAOManager dao, String idCliente) {
+        String sentencia = "DELETE FROM carritos " +
+                "WHERE idCliente = ?;";
+
+        try {
+                dao.open();
+                PreparedStatement stmt = dao.getConn().prepareStatement(sentencia);
+                stmt.setString(1,idCliente);
+                stmt.executeUpdate();
+                return true;
+        } catch (Exception e){
+            return false;
+        }
+    }
 
 }

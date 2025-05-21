@@ -1,6 +1,5 @@
 import Communications.Email;
 import models.*;
-import org.apache.commons.collections4.map.HashedMap;
 import persistencia.Persistencia;
 import utils.Utils;
 import views.Menu;
@@ -9,6 +8,7 @@ import views.PintaConsola;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class Main {
@@ -652,7 +652,7 @@ public class Main {
                 if (clienteExtendido == null) Utils.pulsaEnter("Id no encontrada.");
                 if (clienteExtendido != null){
                     Utils.limpiarPantalla();
-                    PintaConsola.pintaDatosCliente(clienteExtendido);
+                    PintaConsola.pintaDatosCliente(controlador, clienteExtendido);
                     Utils.pulsaEnter("Aqui tienes los datos extendidos del cliente");
                 }
                 if(pedirPorTecladoSN("¿Quieres volver a ver la lista de clientes?(S/N): ").equalsIgnoreCase("s")) idCliente = "a";
@@ -1311,7 +1311,7 @@ public class Main {
                 case 1-> menuMostrarCatalogo(controlador);
                 case 2-> menuRealizarPedido(controlador, user);
                 case 3-> menuMostrarPedidos(controlador, user);
-                case 4-> pintaDatosCliente(user);
+                case 4-> pintaDatosCliente(controlador, user);
                 case 5-> menuModificaDatosCliente(controlador, user);
             }
         }while (op != 6);
@@ -1322,7 +1322,7 @@ public class Main {
         int opMenuPedido = -1;
         do{
             ArrayList<Producto> carro = controlador.actualizarCarritoCliente(user);
-            HashedMap<Integer, Integer> cantidadProductos = new HashedMap<>();
+            HashMap<Integer, Integer> cantidadProductos = new HashMap<>();
             for(Producto p : carro) cantidadProductos.put(p.getId(), controlador.devuelveCantidadProductoCarrito(user,p.getId()));
             opMenuPedido = -1;
             Utils.limpiarPantalla();
@@ -1337,14 +1337,14 @@ public class Main {
                 case 2-> mostrarCarrito(user, carro, cantidadProductos); //Esta opción le da al cliente la opción de ver su carrito
                 case 3-> addProductoCarro(controlador, user);//Esta opción añadira un producto mediante la ID que introduzca el cliente
                 case 4-> deleteProductoCarro(controlador,user,carro, cantidadProductos); //Esta opción le pide un id de un producto al cliente y si esta en el carro lo elimina
-                case 5-> confirmaPedido(controlador,user); //Esta opción finaliza el pedido
-                case 6-> cancelarPedido(controlador,user); //Esta opción borra el carrito si el cliente lo decide
+                case 5-> confirmaPedido(controlador, user, carro, cantidadProductos); //Esta opción finaliza el pedido
+                case 6-> cancelarPedido(controlador,user, carro, cantidadProductos); //Esta opción borra el carrito si el cliente lo decide
             }
         }while (opMenuPedido <= 4 || opMenuPedido >7);
     }
 
     //Función para mostrar el carrito de un cliente
-    private static void mostrarCarrito(Cliente user, ArrayList<Producto> carro, HashedMap<Integer, Integer> cantidadProductos) {
+    private static void mostrarCarrito(Cliente user, ArrayList<Producto> carro, HashMap<Integer, Integer> cantidadProductos) {
         Utils.limpiarPantalla();
         if (carro.isEmpty()) Utils.pulsaEnter("Todavia no hay productos en el carro");
         else{
@@ -1400,7 +1400,7 @@ public class Main {
     //Pide al usuario un id de un producto y en caso de que exista en el carrito lo elimina de este
     private static void deleteProductoCarro(Controlador controlador, Cliente user,
                                             ArrayList<Producto> carro,
-                                            HashedMap<Integer, Integer> cantidadProductos) {
+                                            HashMap<Integer, Integer> cantidadProductos) {
         int op = -1;
         if (carro.size()<1)
             Utils.pulsaEnter("No hay productos en el carrito");
@@ -1455,13 +1455,13 @@ public class Main {
     }
 
     //Metodo que le pregunta al cliente si desea finalizar su pedido
-    private static void confirmaPedido(Controlador controlador, Cliente user) {
-        if (user.getCarro().size()>0){
+    private static void confirmaPedido(Controlador controlador, Cliente user, ArrayList<Producto> carro,
+                                       HashMap<Integer, Integer> cantidadProductos) {
+        if (carro.size()>0){
             System.out.println("Este es su carrito actual:");
-            //PintaConsola.pintaCarroCliente(user, user.getCarro(), user);
-            String respuesta = "";
+            PintaConsola.pintaCarroCliente(user, carro, cantidadProductos);
             if (pedirPorTecladoSN("¿Si desea confirmar el pedido? (S/N): ").equalsIgnoreCase("s")){
-                Utils.pulsaEnter(controlador.confirmaPedidoCliente(user.getId())
+                Utils.pulsaEnter(controlador.confirmaPedidoCliente(user, carro, cantidadProductos)
                         ? "El pedido esta en proceso"
                         : "El pedido no se ha podido realizar");
             }else Utils.pulsaEnter("Entonces se guardara el carrito hasta que usted decida modificarlo a su gusto.");
@@ -1472,11 +1472,11 @@ public class Main {
     }
 
     //Metodo que le pregunta al cliente si desea cancelar el pedido y en caso afirmativo borra el carrito
-    private static void cancelarPedido(Controlador controlador, Cliente user) {
-        if (user.getCarro().size()>0){
+    private static void cancelarPedido(Controlador controlador, Cliente user, ArrayList<Producto> carro,
+                                       HashMap<Integer, Integer> cantidadProductos) {
+        if (carro.size()>0){
             System.out.println("Este es su carrito actual:");
-            //PintaConsola.pintaCarroCliente(user, user.getCarro(), user);
-            String respuesta = "";
+            PintaConsola.pintaCarroCliente(user, carro, cantidadProductos);
             if (pedirPorTecladoSN("¿Desea borrar el pedido? (S/N)").equalsIgnoreCase("s")){
                 Utils.pulsaEnter(controlador.borrarCarritoCliente(user)
                         ? "Carrito borrado con exito"
@@ -1488,10 +1488,10 @@ public class Main {
     // Este menu muestra los pedidos resumidos y ordenados por fecha y de 5 en 5. Cuando introduzca el id del pedido
     // Se mostrará el pedido completo
     private static void menuMostrarPedidos(Controlador controlador, Cliente user) {
-        if (user.getPedidos().isEmpty()) Utils.pulsaEnter("No existen pedidos para mostrar");
+        ArrayList<Pedido> pedidosCliente = controlador.buscaPedidoByCliente(user);
+        if (pedidosCliente.isEmpty()) Utils.pulsaEnter("No existen pedidos para mostrar");
         else{
             System.out.println("Aqui tienes un listado con tus productos.");
-            ArrayList<Pedido> pedidosCliente = user.getPedidos();
             Collections.sort(pedidosCliente); // Ordenamos los pedidos por fecha de pedido.
             int cont;
             String opElegida;
@@ -1546,9 +1546,9 @@ public class Main {
     }
 
     //Pinta los datos del cliente
-    private static void pintaDatosCliente(Cliente user) {
+    private static void pintaDatosCliente(Controlador controlador, Cliente user) {
         Utils.limpiarPantalla();
-        PintaConsola.pintaDatosCliente(user);
+        PintaConsola.pintaDatosCliente(controlador, user);
         Utils.pulsaEnter("\nAqui tienes tus datos personales pulsa enter para volver al menu anterior.");
     }
 

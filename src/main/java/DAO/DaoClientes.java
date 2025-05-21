@@ -22,4 +22,7 @@ public interface DaoClientes {
     Integer devuelveCantidadProductoCarrito(DAOManager dao, String idCliente, int idProducto);
 
     boolean quitarProductosCarrito(DAOManager dao, String id, int id1, int cantidadAEliminar, int cantidadActual);
+
+    boolean vaciaCarro(DAOManager dao, String idCliente);
+
 }
