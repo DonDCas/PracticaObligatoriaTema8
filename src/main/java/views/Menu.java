@@ -255,9 +255,10 @@ public class Menu {
     //Menus del Trabajador
     //Menu principal del trabajador
     public static void menuTrabajador(Controlador controlador, Trabajador trabajador, String ultimoInicioSesion) {
-        String mensaje = String.format((trabajador.numPedidosPendientes()>0)
+        ArrayList<Pedido> pedidosPendientesTrabajador = controlador.recuperaPedidosPendientesTrabajador(trabajador);
+        String mensaje = String.format((pedidosPendientesTrabajador.size()>0)
                 ? "Tienes %-2d pedido(s) pendiente(s)."
-                : "No tienes pedidos asignados.", trabajador.numPedidosPendientes());
+                : "No tienes pedidos asignados.", pedidosPendientesTrabajador.size());
         System.out.printf("""
                 ╔═════════════════════════════════════════════════════════════╗
                 ║                                                             ║

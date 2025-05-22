@@ -2,6 +2,7 @@ package DAO;
 
 import models.Admin;
 import models.Cliente;
+import models.Trabajador;
 
 import java.util.ArrayList;
 
@@ -28,4 +29,8 @@ public interface DaoUsuarios {
     ArrayList<Admin> readAllAdmins(DAOManager dao);
 
     ArrayList<Cliente> readAllClientes(DAOManager dao);
+
+    ArrayList<Trabajador> readAllTrabajadores(DAOManager dao);
+
+    Cliente buscaClienteByIdPedido(DAOManager dao, String idPedido);
 }

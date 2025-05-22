@@ -3,6 +3,7 @@ package DAO;
 import models.Cliente;
 
 public interface DaoClientes {
+
     boolean updateCorreoValido(DAOManager dao, boolean nuevoValor, Cliente cliente);
 
     boolean updateToken(DAOManager dao, String token);
@@ -24,5 +25,4 @@ public interface DaoClientes {
     boolean quitarProductosCarrito(DAOManager dao, String id, int id1, int cantidadAEliminar, int cantidadActual);
 
     boolean vaciaCarro(DAOManager dao, String idCliente);
-
 }

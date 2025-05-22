@@ -18,4 +18,8 @@ public interface DaoPedidos {
     boolean insertarLineasPedidos(DAOManager dao, String idPedido, ArrayList<Producto> carro, HashMap<Integer, Integer> cantidadProductos);
 
     boolean borrarPedidoById(DAOManager dao, String idPedido);
+
+    ArrayList<Pedido> readByidTrabajadorAsignado(DAOManager dao, String id);
+
+    ArrayList<Pedido> readByidTrabajadorAsignadoSinCompletar(DAOManager dao, String id);
 }

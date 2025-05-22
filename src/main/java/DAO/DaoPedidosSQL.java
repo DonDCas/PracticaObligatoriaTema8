@@ -148,6 +148,68 @@ public class DaoPedidosSQL implements DaoPedidos {
 
     }
 
+    @Override
+    public ArrayList<Pedido> readByidTrabajadorAsignado(DAOManager dao, String idTrabajador) {
+        ArrayList<Pedido> pedidos = new ArrayList<>();
+        String sentencia = "Select pat.*, p.* " +
+                "From Pedido_asignado_trabajador pat " +
+                "INNER Join Pedidos p " +
+                "ON pat.id_Pedido = p.id_pedido " +
+                "WHERE pat.id_trabajadorAsignado = ?;";
+        String sentenciaProductos = "SELECT * " +
+                "FROM lineasPedido " +
+                "WHERE id_pedido = ?;";
+        try{
+            dao.open();
+            PreparedStatement stmt = dao.getConn().prepareStatement(sentencia);
+            stmt.setString(1,idTrabajador);
+            ResultSet rs = stmt.executeQuery();
+            pedidos = leerResultadosArrayList(rs);
+            for(Pedido pedido : pedidos){
+                stmt = dao.getConn().prepareStatement(sentenciaProductos);
+                stmt.setString(1,pedido.getId());
+                ResultSet rs2 = stmt.executeQuery();;
+                ResultSet rs3 = rs2;
+                pedido.setProductos(leerResultadosArrayListProductos(rs2));
+                pedido.setCantidadProductos(leerResultadosMapaCantidadProductos(rs3));
+            }
+            return pedidos;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @Override
+    public ArrayList<Pedido> readByidTrabajadorAsignadoSinCompletar(DAOManager dao, String idTrabajador) {
+        ArrayList<Pedido> pedidos = new ArrayList<>();
+        String sentencia = "Select pat.*, p.* " +
+                "From Pedido_asignado_trabajador pat " +
+                "INNER Join Pedidos p " +
+                "ON pat.id_Pedido = p.id_pedido " +
+                "WHERE pat.id_trabajadorAsignado = ? AND p.estado <= 1;";
+        String sentenciaProductos = "SELECT * " +
+                "FROM lineasPedido " +
+                "WHERE id_pedido = ?;";
+        try{
+            dao.open();
+            PreparedStatement stmt = dao.getConn().prepareStatement(sentencia);
+            stmt.setString(1,idTrabajador);
+            ResultSet rs = stmt.executeQuery();
+            pedidos = leerResultadosArrayList(rs);
+            for(Pedido pedido : pedidos){
+                stmt = dao.getConn().prepareStatement(sentenciaProductos);
+                stmt.setString(1,pedido.getId());
+                ResultSet rs2 = stmt.executeQuery();;
+                ResultSet rs3 = rs2;
+                pedido.setProductos(leerResultadosArrayListProductos(rs2));
+                pedido.setCantidadProductos(leerResultadosMapaCantidadProductos(rs3));
+            }
+            return pedidos;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private HashMap<Integer, Integer> leerResultadosMapaCantidadProductos(ResultSet rs3) {
         HashMap<Integer, Integer> cantidadProductos = new HashMap<>();
         try{

@@ -1,7 +1,11 @@
 package DAO;
 
+import models.Pedido;
+import models.Trabajador;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 
 public class DaoTrabajadorSQL implements DaoTrabajadores {
 
@@ -9,27 +13,30 @@ public class DaoTrabajadorSQL implements DaoTrabajadores {
     @Override
     public String buscaTrabajadorParaAsignar(DAOManager dao) {
         String sentencia = "SELECT\n" +
-                "            CASE\n" +
-                "    WHEN COUNT(*) = 1 THEN MIN(id_trabajadorAsignado)\n" +
-                "    ELSE NULL\n" +
+                "    CASE\n" +
+                "        WHEN COUNT(*) = 1 THEN MIN(id_trabajadorAsignado)\n" +
+                "        ELSE NULL\n" +
                 "    END AS trabajadorElegido\n" +
+                "FROM (\n" +
+                "    SELECT pat.id_trabajadorAsignado, COUNT(*) AS num_pedidos\n" +
+                "    FROM Pedido_asignado_trabajador pat\n" +
+                "    JOIN Pedidos p ON pat.id_Pedido = p.id_Pedido\n" +
+                "    JOIN trabajadores t ON pat.id_trabajadorAsignado = t.Id_Trabajador\n" +
+                "    WHERE p.estado <= 1\n" +
+                "      AND t.baja = false\n" +
+                "    GROUP BY pat.id_trabajadorAsignado\n" +
+                ") AS subconsulta\n" +
+                "WHERE num_pedidos = (\n" +
+                "    SELECT MIN(num_pedidos)\n" +
                 "    FROM (\n" +
-                "       SELECT id_trabajadorAsignado, COUNT(*) AS num_pedidos\n" +
-                "       FROM Pedido_asignado_trabajador pat\n" +
+                "        SELECT COUNT(*) AS num_pedidos\n" +
+                "        FROM Pedido_asignado_trabajador pat\n" +
                 "        JOIN Pedidos p ON pat.id_Pedido = p.id_Pedido\n" +
-                "       WHERE p.estado <= 1" +
-                "       AND t.\n" +
-                "       GROUP BY id_trabajadorAsignado\n" +
-                "   ) AS subconsulta\n" +
-                "        WHERE num_pedidos = (\n" +
-                "                SELECT MIN(num_pedidos)\n" +
-                "       FROM (\n" +
-                "                SELECT COUNT(*) AS num_pedidos\n" +
-                "       FROM Pedido_asignado_trabajador pat\n" +
-                "        JOIN Pedidos p ON pat.id_Pedido = p.id_Pedido\n" +
-                "       WHERE p.estado <= 1\n" +
-                "        GROUP BY id_trabajadorAsignado\n" +
-                "       ) AS sub2\n" +
+                "        JOIN trabajadores t ON pat.id_trabajadorAsignado = t.Id_Trabajador\n" +
+                "        WHERE p.estado <= 1\n" +
+                "          AND t.baja = false\n" +
+                "        GROUP BY pat.id_trabajadorAsignado\n" +
+                "    ) AS sub2\n" +
                 ");";
         try{
             dao.open();
@@ -56,4 +63,5 @@ public class DaoTrabajadorSQL implements DaoTrabajadores {
             return false;
         }
     }
+
 }

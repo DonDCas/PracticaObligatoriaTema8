@@ -3,7 +3,6 @@ package models;
 import Communications.Email;
 import Communications.Telegram;
 import DAO.*;
-import data.DataTrabajadores;
 import persistencia.Persistencia;
 import utils.Utils;
 
@@ -27,33 +26,12 @@ public class Controlador implements Serializable {
     //Constructor
     public Controlador() {
         dao = DAOManager.getSinglentonInstance();
+        daoAdmin = new DaoAdminsSQL();
+        daoPedidos = new DaoPedidosSQL();
+        daoClientes = new DaoClientesSQL();
         daoUsuarios = new DaoUsuariosSQL();
         daoProductos = new DaoProductosSQL();
-        daoAdmin = new DaoAdminsSQL();
-        daoClientes = new DaoClientesSQL();
         daoTrabajador = new DaoTrabajadorSQL();
-        daoPedidos = new DaoPedidosSQL();
-        this.trabajadores = new ArrayList<>();
-        pedidoCliente = new HashMap<>();
-    }
-
-    //Metodos relacionados a la Persistencia de datos
-    public void cargarDatos() {
-        Persistencia.existeCarpetaContenedora();
-        if(Persistencia.existenDatosMapa()){
-            pedidoCliente = Persistencia.cargaDatosMapa();
-        }
-        if(Persistencia.existenDatosTrabajador()){
-            trabajadores = Persistencia.cargaDatosTrabajador();
-        }else{
-            mockTrabajadores();
-            //Cargar mock trabajadores
-        }
-    }
-
-    private void mockTrabajadores() {
-        trabajadores.addAll(DataTrabajadores.getTrabajadoresMock());
-        Persistencia.guardaDatosTrabajadores(this);
     }
 
     //Getters y Setters
@@ -62,11 +40,7 @@ public class Controlador implements Serializable {
     }
 
     public ArrayList<Trabajador> getTrabajadores() {
-        return trabajadores;
-    }
-
-    public void setTrabajadores(ArrayList<Trabajador> trabajadores) {
-        this.trabajadores = trabajadores;
+        return daoUsuarios.readAllTrabajadores(dao);
     }
 
     public ArrayList<Admin> getAdmins() {
@@ -81,19 +55,7 @@ public class Controlador implements Serializable {
 
     //Metodo que sirve para encontrar el usuario que esta intentando iniciar sesión.
     //Si no lo encuentra devuelve Null
-    public Object login(String email, String clave) {
-        return daoUsuarios.readUser(dao,email,clave);/*
-        for(Admin admin :admins)
-            if (admin.login(email,clave))
-                return admin;
-        for(Trabajador trab : trabajadores)
-            if (trab.login(email, clave))
-                return trab;
-        for(Cliente clie :clientes)
-            if (clie.login(email,clave))
-                return clie;
-        return null;*/
-    }
+    public Object login(String email, String clave) {return daoUsuarios.readUser(dao,email,clave);}
 
     //Metodo que comprueba que devuelve añade un producto al carro del cliente
     // en caso de que se encuentre la ID del producto
@@ -116,6 +78,8 @@ public class Controlador implements Serializable {
         String idPedido = generaIdPedido();
         if (daoPedidos.clienteRealizaPedido(dao, cliente.getId(), idPedido)){
             if(daoPedidos.insertarLineasPedidos(dao, idPedido, carro, cantidadProductos)){
+                Persistencia.creaFacturaPDF(cliente,daoPedidos.readById(dao, idPedido));
+                cliente.vaciaCarro(dao, daoClientes);
                 Trabajador trabajadorCandidato = buscaTrabajadorCandidatoParaAsignar();
                 if (trabajadorCandidato != null) asignaPedido(idPedido, trabajadorCandidato.getId());
                 return true;
@@ -126,18 +90,7 @@ public class Controlador implements Serializable {
     }
 
     public Trabajador buscaTrabajadorCandidatoParaAsignar() {
-        Trabajador trabajadorCandidato = buscaTrabajadorByID(daoTrabajador.buscaTrabajadorParaAsignar(dao));
-        for(Trabajador trabajador : trabajadores){
-            if (!trabajador.isBaja()){
-                if (trabajadorCandidato == null) trabajadorCandidato = trabajador;
-                else{
-                    if (trabajadorCandidato.numPedidosPendientes() > trabajador.numPedidosPendientes())
-                        trabajadorCandidato = trabajador;
-                }
-            }
-        }
-        if (hayEmpateTrabajadoresCandidatos(trabajadorCandidato)) return null;
-        return trabajadorCandidato;
+        return  (Trabajador) daoUsuarios.readUserById(dao, daoTrabajador.buscaTrabajadorParaAsignar(dao));
     }
 
     public boolean hayEmpateTrabajadoresCandidatos(Trabajador candidato) {
@@ -215,13 +168,7 @@ public class Controlador implements Serializable {
 
     //Metodo que devuelve un Arraylist contodos los pedidos realizados
     public ArrayList<Pedido> getTodosPedidos() {
-        ArrayList<Pedido> pedidosTotales = new ArrayList<>();
-        for(Cliente c : daoUsuarios.readAllClientes(dao)){
-            for (Pedido pedidoCliente : c.getPedidos()){
-                if (!pedidosTotales.contains(pedidoCliente)) pedidosTotales.add(pedidoCliente);
-            }
-        }
-        return pedidosTotales;
+        return daoPedidos.readAllPedidos(dao);
     }
 
     //Metodo que cuenta todos los pedidos que se han realizado en la app
@@ -296,16 +243,12 @@ public class Controlador implements Serializable {
     }
 
     public boolean asignaPedido(String idPedido, String idTrabajador) {
-        daoTrabajador.asignarPedido(dao, idTrabajador, idPedido);
-        Pedido pedido = buscaPedidoById(idPedido);
-        Cliente cliente = pedidoCliente.get(idPedido);
+        Pedido pedido = daoPedidos.readById(dao, idPedido);
+        Cliente cliente = daoUsuarios.buscaClienteByIdPedido(dao, idPedido);
         if (pedido == null) return false;
-        Trabajador trabajador = buscaTrabajadorByID(idTrabajador);
+        Trabajador trabajador = (Trabajador) daoUsuarios.readUserById(dao, idTrabajador);
         if (trabajador == null) return false;
-        if (trabajador.asignaPedido(pedido)){
-            Persistencia.guardaDatosTrabajador(trabajador);
-            Persistencia.guardaDatosCliente(cliente);
-            Persistencia.registraLogAsignaPedido(trabajador, pedido);
+        if (daoTrabajador.asignarPedido(dao, idTrabajador, idPedido)){
             Telegram.asignaPedidoMensajeTelegram(pedido, trabajador);
             Email.generarCorreoAsignacionPedido(trabajador, pedido,cliente);
             return true;
@@ -313,12 +256,10 @@ public class Controlador implements Serializable {
         return false;
     }
 
-    public ArrayList<PedidoClienteDataClass> getPedidosAsignadosTrabajador(String idTrabajador){
-        Trabajador trabajador = buscaTrabajadorByID(idTrabajador);
-        if (trabajador == null) return null;
+    public ArrayList<PedidoClienteDataClass> getPedidosAsignadosTrabajador(ArrayList<Pedido> pedidosAsignadosTrabajador){
         ArrayList<PedidoClienteDataClass> resultado = new ArrayList<>();
-        for(Pedido p : trabajador.getPedidosAsignados()) {
-            if (p.getEstado()<3) resultado.add(new PedidoClienteDataClass(p.getId(), pedidoCliente.get(p.getId())));
+        for(Pedido p : pedidosAsignadosTrabajador) {
+            if (p.getEstado()<3) resultado.add(new PedidoClienteDataClass(p.getId(), daoUsuarios.buscaClienteByIdPedido(dao, p.getId())));
         }
         return resultado;
     }
@@ -463,17 +404,6 @@ public class Controlador implements Serializable {
         }
         return user.isCorreoValidado();
     }
-/*
-    //Metodo que comprueba si el trabajador tiene el correo validado
-    public boolean compruebaTrabajadorValidado(Trabajador user) { return user.isCorreoValidado();}
-
-    //Metodo para validar al trabajador si el token que da el usuario es correcto
-    public boolean validarTrabajador(Trabajador user, String token) {
-        if (user.getToken().equals(token)){
-            user.setCorreoValidado(true);
-        }
-        return user.isCorreoValidado();
-    }*/
 
     //Metodo que devuelve la cantidad de pedidos en que no estan ni cancelados ni completados de un cliente.
     public int cuentaPedidosPendientesCliente(Cliente cliente) {
@@ -622,10 +552,7 @@ public class Controlador implements Serializable {
     }
 
     public PedidoClienteDataClass getPedidoClienteUnico(String idPedido) {
-        for (Pedido p: getTodosPedidos()){
-            if (p.getId().equals(idPedido)) return new PedidoClienteDataClass(idPedido, pedidoCliente.get(idPedido));
-        }
-        return null;
+        return new PedidoClienteDataClass(idPedido, daoUsuarios.buscaClienteByIdPedido(dao, idPedido));
     }
 
     //Metodo que devuelve la cantidad de pedidos en estado de enviado o cancelado
@@ -809,8 +736,12 @@ public class Controlador implements Serializable {
         return daoPedidos.readByidCliente(dao, user.getId());
     }
 
-   /* public void modificaRuta(String rutaAModificadar, String nuevaRuta) {
-        Persistencia.modificaRuta(rutaAModificadar, nuevaRuta);
-    }*/
+    public ArrayList<Pedido> recuperaPedidosPendientesTrabajador(Trabajador trabajador) {
+        return daoPedidos.readByidTrabajadorAsignadoSinCompletar(dao, trabajador.getId());
 
+    }
+
+    public ArrayList<Pedido> recuperaPedidosAsignadosTrabajador(Trabajador trabajador) {
+        return daoPedidos.readByidTrabajadorAsignado(dao, trabajador.getId());
+    }
 }

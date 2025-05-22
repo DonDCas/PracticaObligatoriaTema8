@@ -146,6 +146,50 @@ public class DaoUsuariosSQL implements DaoUsuarios {
         return consultaArrayListClientes(dao, sentencia);
     }
 
+    @Override
+    public ArrayList<Trabajador> readAllTrabajadores(DAOManager dao) {
+        String sentencia = "Select u.*, t.* from Usuarios u " +
+                "LEFT JOIN trabajadores t on u.id=t.Id_Trabajador " +
+                "WHERE u.Id Like ('C%')";
+        return consultaArrayListTrabajadores(dao, sentencia);
+    }
+
+    @Override
+    public Cliente buscaClienteByIdPedido(DAOManager dao, String idPedido) {
+        String sentencia = "Select u.*, c.* from Usuarios u " +
+                "LEFT JOIN Clientes c on u.id=c.Id_Cliente " +
+                "Inner Join Pedidos p " +
+                "on c.Id_Cliente = p.id_Cliente " +
+                "WHERE p.id_Pedido= ?;";
+        try {
+            dao.open();
+            PreparedStatement stmt = dao.getConn().prepareStatement(sentencia);
+            stmt.setString(1,idPedido);
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+            return leeFilaCliente(rs);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private ArrayList<Trabajador> consultaArrayListTrabajadores(DAOManager dao, String sentencia) {
+        ArrayList<Trabajador> todosLosTrabajadores = new ArrayList<>();
+        Trabajador trabajador;
+        try {
+            dao.open();
+            PreparedStatement ps = dao.getConn().prepareStatement(sentencia);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()){
+                trabajador = leerFilaTrabajadores(rs);
+                todosLosTrabajadores.add(trabajador);
+            }
+            return todosLosTrabajadores;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private ArrayList<Cliente> consultaArrayListClientes(DAOManager dao, String sentencia) {
         ArrayList<Cliente> todosLosClientes = new ArrayList<>();
         Cliente cliente;
@@ -201,23 +245,9 @@ public class DaoUsuariosSQL implements DaoUsuarios {
             PreparedStatement ps = dao.getConn().prepareStatement(sentencia);
             try (ResultSet rs = ps.executeQuery()){
                 if(rs.next()){
-                    if(rs.getString("Id").charAt(0)=='A'){
-                        return leeFilaAdmins(rs);
-
-                    }
-                    if(rs.getString("id").charAt(0)=='T'){
-                        return new Trabajador(
-                                rs.getString("id"),
-                                rs.getString("Correo"),
-                                rs.getString("Pass"),
-                                rs.getString("Nombre"),
-                                rs.getInt("Movil"),
-                                rs.getInt("idTelegram")
-                        );
-                    }
-                    if(rs.getString("id").charAt(0)=='C'){
-                        return leeFilaCliente(rs);
-                    }
+                    if(rs.getString("Id").charAt(0)=='A') return leeFilaAdmins(rs);
+                    if(rs.getString("id").charAt(0)=='T') return leerFilaTrabajadores(rs);
+                    if(rs.getString("id").charAt(0)=='C') return leeFilaCliente(rs);
                     return null;
                 }
                 dao.close();
@@ -226,6 +256,17 @@ public class DaoUsuariosSQL implements DaoUsuarios {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private Trabajador leerFilaTrabajadores(ResultSet rs) throws SQLException {
+        return new Trabajador(
+                rs.getString("id"),
+                rs.getString("Correo"),
+                rs.getString("Pass"),
+                rs.getString("Nombre"),
+                rs.getInt("Movil"),
+                rs.getInt("idTelegram")
+        );
     }
 
     private Admin leeFilaAdmins(ResultSet rs) throws SQLException {

@@ -265,14 +265,16 @@ public class Main {
         ArrayList<Producto> productosByTermino = controlador.buscaProductosByTermino(termino);
         if (productosByTermino.isEmpty()) Utils.pulsaEnter("No se encontró ningún producto relacionado. (Pulsa Enter para continuar).");
         else {
-            int cont = 0;
+            //TODO estp va raro
+            int cont = -1;
             int op = -1;
             Utils.limpiarPantalla();
             for (Producto p : productosByTermino){
+                cont++;
                 if (cont == 0){
                     PintaConsola.cabeceraCatalogoReducido();
                 }
-                PintaConsola.pintaProductoCatalogoReducido(p, (cont+1));
+                PintaConsola.pintaProductoCatalogoReducido(p, (cont)+1);
                 if (cont == 4 || p == productosByTermino.getLast()){
                     PintaConsola.pieCatalogoReducido();
                     Utils.posicionLista("Producto: ", p, productosByTermino);
@@ -282,9 +284,9 @@ public class Main {
                         }catch (NumberFormatException e){
                             Utils.pulsaEnter("No se introdujo un numero");
                         }
-                        if (op < 1 || op > 5) Utils.pulsaEnter("Opción introducida erronea.");
+                        if (op < 1 || op > cont) Utils.pulsaEnter("Opción introducida erronea.");
                         else {
-                            int idProducto = productosByTermino.get(productosByTermino.indexOf(p) - (cont - op) -1).getId();
+                            int idProducto = productosByTermino.get(productosByTermino.indexOf(p) - (cont - op)-1).getId();
                             Producto producto = controlador.buscaProductoById(idProducto);
                             PintaConsola.pintaProductoCatalogo(producto);
                             if (pedirPorTecladoSN("¿Es este el producto deseado?(S/N): ").equalsIgnoreCase("s"))
@@ -294,7 +296,6 @@ public class Main {
                     Utils.limpiarPantalla();
                     cont = -1;
                 }
-                cont++;
             }
         }
         return -1;
@@ -1016,11 +1017,12 @@ public class Main {
     //Metodo que muestra el listado de pedidos asignados al trabajador
     private static void menuConsultaPedidosAsignados(Controlador controlador, Trabajador user) {
         String idPedido = "";
-        if (user.numPedidosPendientes()<1) Utils.pulsaEnter("No tienes pedidos asignados.");
+        ArrayList<Pedido> pedidosAsignados = controlador.recuperaPedidosAsignadosTrabajador(user);
+        if (pedidosAsignados.size()<1) Utils.pulsaEnter("No tienes pedidos asignados.");
         else{
             do{
                 Utils.limpiarPantalla();
-                idPedido = PintaConsola.pintaPedidosAsignados(user, controlador.getPedidosAsignadosTrabajador(user.getId()));
+                idPedido = PintaConsola.pintaPedidosAsignados(pedidosAsignados, controlador.getPedidosAsignadosTrabajador(pedidosAsignados));
                 if(!idPedido.isEmpty()){
                     PedidoClienteDataClass datosPedido = controlador.getPedidoClienteUnico(idPedido);
                     PintaConsola.pintaDatosPedidoExtendido(controlador.buscaPedidoById(idPedido),datosPedido);
@@ -1035,8 +1037,9 @@ public class Main {
     //Metodo que muestra al trabajador los pedidos y cuando elija un by ID podra modificarle el estado, cometarios y fechas de entrega
     private static void menuModificarEstadoPedido(Controlador controlador, Trabajador user) {
         String idPedido = "";
+        ArrayList<Pedido> pedidosTrabajador = controlador.recuperaPedidosPendientesTrabajador(user);
         int op = -1;
-        if (user.numPedidosPendientes()<1){
+        if (pedidosTrabajador.size()<1){
             Utils.pulsaEnter("No tienes pedidos asignados pendientes.");
         }
         else{
@@ -1045,8 +1048,8 @@ public class Main {
                 op = -1;
                 idPedido = "";
                 String respuestaSN = "";
-                if (user.numPedidosPendientes()>0){
-                    idPedido = PintaConsola.pintaPedidosAsignados(user, controlador.getPedidosAsignadosTrabajador(user.getId()));
+                if (pedidosTrabajador.size()>0){
+                    idPedido = PintaConsola.pintaPedidosAsignados(pedidosTrabajador, controlador.getPedidosAsignadosTrabajador(pedidosTrabajador));
                     if (!idPedido.isEmpty()) {
                         Pedido pedido = controlador.buscaPedidoById(idPedido);
                         if (pedido != null){

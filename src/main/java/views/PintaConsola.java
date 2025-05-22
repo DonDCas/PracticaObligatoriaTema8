@@ -23,9 +23,9 @@ public class PintaConsola {
         };
     }
 
-    public static String pintaPedidosAsignados(Trabajador trabajador, ArrayList<PedidoClienteDataClass> pedidosDatosClientes) {
+    public static String pintaPedidosAsignados(ArrayList<Pedido> pedidosTrabajador,
+                                               ArrayList<PedidoClienteDataClass> pedidosDatosClientes) {
         String estado = "";
-        ArrayList<Pedido> pedidosTrabajador = new ArrayList<>(trabajador.getPedidosPendientes());
         Collections.sort(pedidosTrabajador);
         String idPedido = "";
         int cont = 1;
@@ -42,7 +42,7 @@ public class PintaConsola {
                 if (p.getId().equals(datos.getIdPedido())) datosCliente = datos;
             estado = estadoPedido(p.getEstado());
             if (p.getEstado()<3)
-                System.out.printf("║ %3d. -- Estado: %-15s Fecha de Pedido: %s - NºProductos: %d - Precio(SinIVA): %7.2f e - ID:Cliente: %8s ║\n",
+                System.out.printf("║ %3d. -- Estado: %-15s Fecha de Pedido: %s - NºProductos: %d - Precio(SinIVA): %7.2f e - ID:Cliente: %8s  ║\n",
                         cont, estado, Utils.fechaAString(p.getFechaPedido()), p.numArticulos(), p.calculaTotalPedidoConIVA(DataIVA.IVA), datosCliente.getNombreCliente());
 
             if (cont == 5 || p == pedidosTrabajador.getLast()){
