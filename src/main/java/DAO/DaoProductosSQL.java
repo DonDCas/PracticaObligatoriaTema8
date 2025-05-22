@@ -91,6 +91,16 @@ public class DaoProductosSQL implements DaoProductos {
         return resultadoSelectArrayList(dao, sentencia);
     }
 
+    @Override
+    public ArrayList<Producto> recuperaCarritoCliente(DAOManager dao, String idCliente) {
+        String sentencia = "select c.*, p.* " +
+                "from carritos c " +
+                "inner join Productos p " +
+                "on idProducto = id_producto " +
+                "where c.idcliente = '"+idCliente+"';";
+        return resultadoSelectArrayList(dao, sentencia);
+    }
+
     private Producto filaSelect(ResultSet rs) throws SQLException {
                 return new Producto(
                 rs.getInt("id_Producto"),

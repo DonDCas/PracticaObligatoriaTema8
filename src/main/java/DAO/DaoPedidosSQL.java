@@ -3,9 +3,11 @@ package DAO;
 import models.Pedido;
 import models.Producto;
 
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -210,6 +212,74 @@ public class DaoPedidosSQL implements DaoPedidos {
         }
     }
 
+    @Override
+    public boolean updateEstadoPedido(DAOManager dao, String idPedido, int nuevoEstado) {
+        String sentencia = "UPDATE Pedidos " +
+                "SET estado = ? " +
+                "WHERE id_Pedido = ?;";
+        try{
+            dao.open();
+            PreparedStatement stmt = dao.getConn().prepareStatement(sentencia);
+            stmt.setInt(1, nuevoEstado);
+            stmt.setString(2, idPedido);
+            stmt.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean updateComentarioPedido(DAOManager dao, String idPedido, String comentario) {
+        String sentencia = "UPDATE Pedidos " +
+                "SET comentario = ? " +
+                "WHERE id_Pedido = ?;";
+        try{
+            dao.open();
+            PreparedStatement stmt = dao.getConn().prepareStatement(sentencia);
+            stmt.setString(1, comentario);
+            stmt.setString(2, idPedido);
+            stmt.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean updateFechaEntrega(DAOManager dao, String idPedido, LocalDate nuevaFecha) {
+        String sentencia = "UPDATE Pedidos " +
+                "SET fechaEntrega = ? " +
+                "WHERE id_Pedido = ?;";
+        try{
+            dao.open();
+            PreparedStatement stmt = dao.getConn().prepareStatement(sentencia);
+            stmt.setDate(1, Date.valueOf(nuevaFecha));
+            stmt.setString(2, idPedido);
+            stmt.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean quitarPedidosTrabajador(DAOManager dao, String idTrabajador, ArrayList<Pedido> pedidosAsignados) {
+        String sentencia = "DELETE FROM Pedido_asignado_trabajador where id_trabajadorAsignado = ? AND id_Pedido = ?";
+        for (Pedido pedido : pedidosAsignados){
+            try{
+                dao.open();
+                PreparedStatement stmt = dao.getConn().prepareStatement(sentencia);
+                stmt.setString(1, idTrabajador);
+                stmt.setString(2, pedido.getId());
+                stmt.executeUpdate();
+            }catch (Exception e){
+                return false;
+            }
+        }
+        return true;
+    }
+
     private HashMap<Integer, Integer> leerResultadosMapaCantidadProductos(ResultSet rs3) {
         HashMap<Integer, Integer> cantidadProductos = new HashMap<>();
         try{
@@ -266,7 +336,7 @@ public class DaoPedidosSQL implements DaoPedidos {
         return new Pedido(
                 rs.getString("id_Pedido"),
                 rs.getDate("fechaPedido").toLocalDate(),
-                rs.getDate("fechaEntrega").toLocalDate(),
+                rs.getDate("fechaEntrega") != null ? rs.getDate("fechaEntrega").toLocalDate() : null,
                 rs.getInt("estado"),
                 rs.getString("comentario")
         );

@@ -15,7 +15,6 @@ import models.Trabajador;
 import persistencia.Persistencia;
 import utils.Utils;
 
-import java.io.FileReader;
 import java.time.LocalDate;
 import java.util.Properties;
 
@@ -155,7 +154,7 @@ public class Email {
                 + "</div>"
                 + "</div>";
 
-        return enviaMail(trabajador.getEmail(), "Nuevo Pedido Asignado",correoHTML);
+        return enviaMail(trabajador.getCorreo(), "Nuevo Pedido Asignado",correoHTML);
     }
 
     public static boolean generarCorreoBienvenida(Trabajador trabajador) {
@@ -168,8 +167,8 @@ public class Email {
 
                 + "<div style=\"font-family: Arial, sans-serif; line-height: 1.6; background-color: #f4f4f4; color: #333333; padding: 20px;\">"
                 + "<h2 style=\"color: #0073e6;\">Tus credenciales de acceso</h2>"
-                + "<p><b>Correo electrónico:</b> " + trabajador.getEmail() + "</p>"
-                + "<p><b>Contraseña temporal:</b> " + trabajador.getClave() + "</p>"
+                + "<p><b>Correo electrónico:</b> " + trabajador.getCorreo() + "</p>"
+                + "<p><b>Contraseña temporal:</b> " + trabajador.getPass() + "</p>"
                 + "<p>Por favor, cambia tu contraseña tras el primer inicio de sesión.</p>"
 
                 + "<h3 style=\"color: #0073e6;\">Tu información de contacto</h3>"
@@ -198,7 +197,7 @@ public class Email {
                 + "</div>"
                 + "</div>";
 
-        return enviaMail(trabajador.getEmail(), "Bienvenido a la familia Fernanshop", correoHTML);
+        return enviaMail(trabajador.getCorreo(), "Bienvenido a la familia Fernanshop", correoHTML);
     }
 
     public static boolean pedidoNuevo(Cliente cliente, Pedido pedido, String rutaPDF, String nombreArchivo) {

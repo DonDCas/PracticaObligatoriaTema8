@@ -41,8 +41,8 @@ public class DaoUsuariosSQL implements DaoUsuarios {
                 stmt.setString(9, cliente.getToken());
                 stmt.setBoolean(10, cliente.isCorreoValidado());
             }
-            /*if (object instanceof Trabajador trabajador){
-                sentencia = "{CALL ModificaCliente(?,?,?,?,?,?,?,?,?,?)}";
+            if (object instanceof Trabajador trabajador){
+                sentencia = "{CALL ModificaTrabajador(?,?,?,?,?,?)}";
                 stmt = dao.getConn().prepareCall(sentencia);
                 stmt.setString(1, trabajador.getId());
                 stmt.setString(2, trabajador.getCorreo());
@@ -50,7 +50,7 @@ public class DaoUsuariosSQL implements DaoUsuarios {
                 stmt.setString(4, trabajador.getNombre());
                 stmt.setInt(5, trabajador.getMovil());
                 stmt.setInt(6, trabajador.getIdTelegram());
-            }*/
+            }
             if (object instanceof Admin)
                 sentencia = "UPDATE Usuario SET " +
                         "Nombre='"+((Admin) object).getNombre()+"'" +
@@ -168,6 +168,46 @@ public class DaoUsuariosSQL implements DaoUsuarios {
             ResultSet rs = stmt.executeQuery();
             rs.next();
             return leeFilaCliente(rs);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @Override
+    public Trabajador readTrabajadorByIdPedido(DAOManager dao, String idPedido) {
+        String sentencia = "Select u.*, t.* " +
+                "from Usuarios u " +
+                "inner join trabajadores t " +
+                "on u.id=t.id_trabajador " +
+                "inner join Pedido_asignado_trabajador pat " +
+                "on t.id_trabajador=pat.id_trabajadorAsignado " +
+                "where id_Pedido= ?;";
+        try {
+            dao.open();
+            PreparedStatement stmt = dao.getConn().prepareStatement(sentencia);
+            stmt.setString(1,idPedido);
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+            return leerFilaTrabajadores(rs);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @Override
+    public Trabajador readTrabajadorById(DAOManager dao, String idTrabajador) {
+        String sentencia = "Select u.*, t.* " +
+                "from Usuarios u " +
+                "inner join trabajadores t " +
+                "on u.id=t.id_trabajador " +
+                "where id= ?;";
+        try {
+            dao.open();
+            PreparedStatement stmt = dao.getConn().prepareStatement(sentencia);
+            stmt.setString(1,idTrabajador);
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+            return leerFilaTrabajadores(rs);
         } catch (Exception e) {
             return null;
         }

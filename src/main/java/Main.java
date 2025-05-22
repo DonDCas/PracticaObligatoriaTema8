@@ -284,7 +284,7 @@ public class Main {
                         }catch (NumberFormatException e){
                             Utils.pulsaEnter("No se introdujo un numero");
                         }
-                        if (op < 1 || op > cont) Utils.pulsaEnter("Opción introducida erronea.");
+                        if (op < 1 || op > cont+1) Utils.pulsaEnter("Opción introducida erronea.");
                         else {
                             int idProducto = productosByTermino.get(productosByTermino.indexOf(p) - (cont - op)-1).getId();
                             Producto producto = controlador.buscaProductoById(idProducto);
@@ -489,6 +489,7 @@ public class Main {
             }
         }while (!loginVacio && user == null && oportunidades<4);
         if (user == null && !loginVacio) System.out.println("Demasiados intentos de autentificación. Se le regresara al menu inicial.");
+        if ((user instanceof Trabajador) && ((Trabajador) user).isBaja()) return null;
         return user;
     }
 
@@ -700,13 +701,13 @@ public class Main {
         do{
             idTrabajador = "";
             Utils.limpiarPantalla();
-            idTrabajador = PintaConsola.pintaResumenTrabajadores(todoslosTrabajadores);
+            idTrabajador = PintaConsola.pintaResumenTrabajadores(controlador, todoslosTrabajadores);
             if (!idTrabajador.isEmpty()){
                 trabajadorExtendido = controlador.buscaTrabajadorByID(idTrabajador);
                 if (trabajadorExtendido == null) Utils.pulsaEnter("Id no encontrada.");
                 if (trabajadorExtendido != null){
                     Utils.limpiarPantalla();
-                    PintaConsola.pintaDatosTrabajador(trabajadorExtendido);
+                    PintaConsola.pintaDatosTrabajador(controlador, trabajadorExtendido);
                     Utils.pulsaEnter("Aqui tienes los datos extendidos del trabajador");
                 }
                 if(pedirPorTecladoSN("¿Quieres volver a ver la lista de trabajadores?(S/N): ").equalsIgnoreCase("s")) idTrabajador = "a";
@@ -911,19 +912,20 @@ public class Main {
             todoslosTrabajadores = controlador.getTrabajadoresDeAlta();
             Utils.limpiarPantalla();
             idTrabajador = "";
-            idTrabajador = PintaConsola.pintaResumenTrabajadores(todoslosTrabajadores);
+            idTrabajador = PintaConsola.pintaResumenTrabajadores(controlador, todoslosTrabajadores);
              if(!idTrabajador.isEmpty()){
                 trabajadorElegido = controlador.buscaTrabajadorByID(idTrabajador);
                 if (trabajadorElegido == null) Utils.pulsaEnter("Trabajador no encontrado.");
                 else{
-                    PintaConsola.pintaDatosTrabajador(trabajadorElegido);
+                    ArrayList<Pedido> pedidosTrabajador = controlador.recuperaPedidosPendientesTrabajador(trabajadorElegido);
+                    PintaConsola.pintaDatosTrabajador(controlador, trabajadorElegido);
                     if (pedirPorTecladoSN("Es este el trabajador que has elegido? (S/N): ").equalsIgnoreCase("S")){
-                        if (trabajadorElegido.numPedidosPendientes()>0){
+                        if (pedidosTrabajador.size()>0){
                             System.out.println("NO se puede dar de baja al trabajador elegido porque tiene pedidos asignados.");
                             if (pedirPorTecladoSN("¿Deseas que se quitarle los pedidos asignados y seguir con el proceso? (S/N): ").
                                     equalsIgnoreCase("s")){
-                                controlador.quitarPedidosAsignados(trabajadorElegido);
-                                controlador.darBajaTrabajador(trabajadorElegido);
+                                if (controlador.quitarPedidosAsignados(trabajadorElegido, pedidosTrabajador))
+                                    controlador.darBajaTrabajador(trabajadorElegido);
                             }
                         }
                         else controlador.darBajaTrabajador(trabajadorElegido);
@@ -968,11 +970,11 @@ public class Main {
             do{
                 trabajadorElegido = false;
                 idTrabajador = "";
-                idTrabajador = PintaConsola.pintaResumenTrabajadores(trabajadores);
+                idTrabajador = PintaConsola.pintaResumenTrabajadores(controlador, trabajadores);
                 if(!idTrabajador.isEmpty()){
                     trabajadorBuscado = controlador.buscaTrabajadorByID(idTrabajador);
                     if (trabajadorBuscado != null){
-                        PintaConsola.pintaDatosTrabajador(trabajadorBuscado);
+                        PintaConsola.pintaDatosTrabajador(controlador, trabajadorBuscado);
                         if (pedirPorTecladoSN("Este es el trabajador al que quieres asignarle el pedido? (S/N): ").equalsIgnoreCase("S")){
                             trabajadorElegido = true;
                         }
@@ -1059,6 +1061,7 @@ public class Main {
                             if (respuestaSN.equalsIgnoreCase("s")) {
                                 modificarEstadoOAddComentario(controlador, user, pedido);
                             }
+                            pedidosTrabajador = controlador.recuperaPedidosPendientesTrabajador(user);
                         }
                         else{
                             Utils.pulsaEnter("No se encontro el pedido solicitado.");
@@ -1241,13 +1244,14 @@ public class Main {
     //Mostrar historico de todos los pedidos que ha tenido el trabajador asignados
     private static void menuMostrarHistorialPedidos(Controlador controlador, Trabajador user) {
         String idPedido = "";
-        if (user.getPedidosAsignados().size()<1) Utils.pulsaEnter("Todavía no se te ha asignado ningún pedido");
+        ArrayList<Pedido> pedidosTrabajador = controlador.recuperaPedidosAsignadosTrabajador(user);
+        if (pedidosTrabajador.size()<1) Utils.pulsaEnter("Todavía no se te ha asignado ningún pedido");
         else{
             do{
                 Utils.limpiarPantalla();
                 idPedido = "";
-                ArrayList<PedidoClienteDataClass> datosPedidosCliente = controlador.getPedidosAsignadosYCompletados(user.getId());
-                idPedido = PintaConsola.pintaHistoricoPedidosDeTrabajador(user, datosPedidosCliente);
+                ArrayList<PedidoClienteDataClass> datosPedidosCliente = controlador.getPedidosAsignadosYCompletados(pedidosTrabajador);
+                idPedido = PintaConsola.pintaHistoricoPedidosDeTrabajador(user, datosPedidosCliente, pedidosTrabajador);
                 if(!idPedido.isEmpty()){
                     Pedido pedido = controlador.buscaPedidoById(idPedido);
                     if (pedido == null) Utils.pulsaEnter("Pedido no encontrado");
@@ -1291,9 +1295,8 @@ public class Main {
                 Utils.pulsaEnter();
             }
         }while (op!=0);
-        if (existeCambio && pedirPorTeclado("¿Quieres guardar los datos? (S/N): ").equalsIgnoreCase("s")){
-            controlador.clonarTrabajadorCopia(user, temp);
-            Utils.pulsaEnter("Datos modificados.");
+        if (existeCambio && pedirPorTecladoSN("¿Quieres guardar los datos? (S/N): ").equalsIgnoreCase("s")){
+            Utils.pulsaEnter(controlador.clonarTrabajadorCopia(user, temp) ? "Datos modificados." : "Hubo un fallo al Modificar los datos");
         }
     }
 
@@ -1410,7 +1413,7 @@ public class Main {
         else {
             System.out.println("Por favor, introduzca el numero que indica el producto que desea eliminar.");
             do{
-                PintaConsola.pintaCarroClienteResumido(carro,cantidadProductos);
+                PintaConsola.pintaCarroClienteResumido(carro, cantidadProductos);
                 try{
                     op = Integer.parseInt(pedirPorTeclado("Indica el producto que deseas eliminar (introduce 0 para salir): "));
                 } catch (NumberFormatException e) {

@@ -21,4 +21,6 @@ public interface DaoProductos {
     public boolean updateProducto(DAOManager dao, int id ,Producto producto);
 
     ArrayList<Producto> recuperaProductosCarrito(DAOManager dao, String idCliente);
+
+    ArrayList<Producto> recuperaCarritoCliente(DAOManager dao, String idCliente);
 }

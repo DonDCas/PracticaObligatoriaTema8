@@ -170,6 +170,10 @@
 [Inicio de sesion]: Javi;dondcas@gmail.com;Cliente;2025-05-19T23:28:17.424822400
 [Inicio de sesion]: Javi;dondcas@gmail.com;Cliente;2025-05-19T23:49:12.176478600
 [Inicio de sesion]: Javi;dondcas@gmail.com;Cliente;2025-05-20T00:04:19.032121100
+[Inicio de sesion]: Javi;dondcas@gmail.com;Cliente;2025-05-20T13:48:53.951211300
+[Inicio de sesion]: Javi;dondcas@gmail.com;Cliente;2025-05-20T14:17:08.014000700
+[Inicio de sesion]: Javi;dondcas@gmail.com;Cliente;2025-05-20T14:18:53.415295
+[Inicio de sesion]: Javi;dondcas@gmail.com;Cliente;2025-05-20T14:25:02.764126900
 [Inicio de sesion]: Javier Cli;dondcas@gmail.com;Cliente;2025-05-20T15:58:33.166311900
 [Inicio de sesion]: Javier Cli;dondcas@gmail.com;Cliente;2025-05-20T16:07:00.570460500
 [Inicio de sesion]: Javier Cli;dondcas@gmail.com;Cliente;2025-05-20T16:11:30.954939900
@@ -185,6 +189,7 @@
 [Inicio de sesion]: Javier Cli;dondcas@gmail.com;Cliente;2025-05-20T18:56:41.322046500
 [Inicio de sesion]: Javier Cli;dondcas@gmail.com;Cliente;2025-05-20T19:06:45.210472900
 [Inicio de sesion]: Javier Cli;dondcas@gmail.com;Cliente;2025-05-20T19:55:42.905082600
+[Inicio de sesion]: Javi;dondcas@gmail.com;Cliente;2025-05-20T20:29:45.944078300
 [Inicio de sesion]: Paco;asdfASDF_4;Admin;2025-05-21T14:40:05.838112400
 [Cierre de sesion]: Paco;asdfASDF_4;Admin;2025-05-21T14:40:20.826052200
 [Inicio de sesion]: Javier Cli;dondcas@gmail.com;Cliente;2025-05-21T14:41:07.654778200
@@ -229,3 +234,29 @@
 [Inicio de sesion]: Javier Cli;dondcas@gmail.com;Cliente;2025-05-22T01:28:00.413063
 [Inicio de sesion]: Javier Cli;dondcas@gmail.com;Cliente;2025-05-22T01:29:39.816380
 [Inicio de sesion]: Javier Cli;dondcas@gmail.com;Cliente;2025-05-22T01:43:10.009611
+[Inicio de sesion]: Javi;dondcas@gmail.com;Cliente;2025-05-22T12:38:35.129168600
+[Inicio de sesion]: Javier Cli;dondcas@gmail.com;Cliente;2025-05-22T12:46:06.296320700
+[Inicio de sesion]: Javier Cli;dondcas@gmail.com;Cliente;2025-05-22T12:50:55.045415500
+[Cierre de sesion]: Javier Cli;dondcas@gmail.com;Cliente;2025-05-22T13:14:15.550753500
+[Inicio de sesion]: Javier Tra;fjrueda92@gmail.com;Trabajador;2025-05-22T13:14:23.335
+[Inicio de sesion]: Javier Tra;fjrueda92@gmail.com;Trabajador;2025-05-22T23:12:36.181004600
+[Inicio de sesion]: Javier Tra;fjrueda92@gmail.com;Trabajador;2025-05-22T23:13:44.122255300
+[Modificacion Pedido]: P1;Estado;2;2025-05-22T23:17:41.766963300
+[Modificacion Pedido]: P1;AddComentario;asdfasdf;2025-05-22T23:21:26.964948500
+[Modificacion Pedido]: P1;Estado;2;2025-05-22T23:22:40.101736
+[Cierre de sesion]: Javier Tra;fjrueda92@gmail.com;Trabajador;2025-05-22T23:23:28.974061900
+[Inicio de sesion]: Mireya;trabajador2@gmail.com;Trabajador;2025-05-22T23:23:37.501687
+[Inicio de sesion]: Javier Tra;fjrueda92@gmail.com;Trabajador;2025-05-22T23:25:20.502792700
+[Modificacion Pedido]: P1;Estado;3;2025-05-22T23:27:48.113052700
+[Modificacion Pedido]: P3;Estado;1;2025-05-22T23:29:15.818036300
+[Modificacion Pedido]: P3;Cambio Fecha;2025-08-25;2025-05-22T23:29:46.921186300
+[Inicio de sesion]: Javier Tra;fjrueda92@gmail.com;Trabajador;2025-05-22T23:45:00.884680400
+[Inicio de sesion]: Javier Tra;fjrueda92@gmail.com;Trabajador;2025-05-22T23:46:24.730599300
+[Inicio de sesion]: Javier Tra;fjrueda92@gmail.com;Trabajador;2025-05-22T23:48:15.402814700
+[Inicio de sesion]: Javier Tra;fjrueda92@gmail.com;Trabajador;2025-05-22T23:51:24.742171900
+[Inicio de sesion]: Javier Tra;fjrueda92@gmail.com;Trabajador;2025-05-22T23:55:49.501902600
+[Inicio de sesion]: Javier Tra;fjrueda92@gmail.com;Trabajador;2025-05-23T01:04:19.319112500
+[Inicio de sesion]: Javier Tra;fjrueda92@gmail.com;Trabajador;2025-05-23T01:06:21.365635300
+[Inicio de sesion]: Javier Tra;fjrueda92@gmail.com;Trabajador;2025-05-23T01:19:39.060706900
+[Cierre de sesion]: FJ;fjrueda92@gmail.com;Trabajador;2025-05-23T01:26:08.318877100
+[Inicio de sesion]: Paco;asdfASDF_4;Admin;2025-05-23T01:26:50.853540200

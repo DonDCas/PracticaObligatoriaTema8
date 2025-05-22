@@ -33,4 +33,8 @@ public interface DaoUsuarios {
     ArrayList<Trabajador> readAllTrabajadores(DAOManager dao);
 
     Cliente buscaClienteByIdPedido(DAOManager dao, String idPedido);
+
+    Trabajador readTrabajadorByIdPedido(DAOManager dao, String idPedido);
+
+    Trabajador readTrabajadorById(DAOManager dao, String idTrabajador);
 }

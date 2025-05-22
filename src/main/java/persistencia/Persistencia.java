@@ -1,6 +1,8 @@
 package persistencia;
 
 import Communications.Email;
+import DAO.DAOManager;
+import DAO.DaoPedidosSQL;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import data.DataIVA;
 import models.*;
@@ -12,13 +14,9 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-
-import static java.lang.System.out;
-import static java.lang.System.setErr;
 
 public class Persistencia {
     public static final String RUTA_CONFIG = ".\\config\\config.properties";
@@ -296,7 +294,7 @@ public class Persistencia {
             }
             if (user instanceof Trabajador){
                 nombreUser = ((Trabajador) user).getNombre();
-                correoUser = ((Trabajador) user).getEmail();
+                correoUser = ((Trabajador) user).getCorreo();
                 tipoUser = "Trabajador";
             }
             if (user instanceof Cliente){
@@ -347,7 +345,7 @@ public class Persistencia {
         }
         if (user instanceof Trabajador){
             nombreUser = ((Trabajador) user).getNombre();
-            correoUser = ((Trabajador) user).getEmail();
+            correoUser = ((Trabajador) user).getCorreo();
             tipoUser = "Trabajador";
         }
         if (user instanceof Cliente){
@@ -364,14 +362,14 @@ public class Persistencia {
         return true;
     }
 
-    public static void registraLogPedidoModificado(Pedido pedido, String nuevoDatoModificado, String tipoModificacion) {
+    public static void registraLogPedidoModificado(String idPedido, String nuevoDatoModificado, String tipoModificacion) {
         Properties pro = iniciaProperties();
         String nombreDirectorio = pro.getProperty("rutaLogs");
         File directorio = new File(nombreDirectorio);
         if (!directorio.exists()) directorio.mkdirs();
         String fechaActual = String.valueOf(LocalDateTime.now());
         String lineaNueva = String.format("[Modificacion Pedido]: %s;%s;%s;%s\n",
-                pedido.getId(),tipoModificacion,nuevoDatoModificado,fechaActual);
+                idPedido,tipoModificacion,nuevoDatoModificado,fechaActual);
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(nombreDirectorio+"\\log.txt",true))){
             bw.write(lineaNueva);
         } catch (IOException e) {
@@ -386,7 +384,7 @@ public class Persistencia {
         File directorio = new File(nombreDirectorio);
         if (directorio.exists()) directorio.mkdirs();
         String fechaActual = String.valueOf(LocalDateTime.now());
-        String linea = String.format("[Asignacion Pedido]: %s;%s;%s;%s\n",pedido.getId(),trabajador.getNombre(),trabajador.getEmail(), fechaActual);
+        String linea = String.format("[Asignacion Pedido]: %s;%s;%s;%s\n",pedido.getId(),trabajador.getNombre(),trabajador.getCorreo(), fechaActual);
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(nombreDirectorio+"\\log.txt",true))){
             bw.write(linea);
         }catch (IOException e){
@@ -438,7 +436,8 @@ public class Persistencia {
     }
 
     public static void exportarAExcelPedidos(ArrayList<Pedido> pedidos, ArrayList<PedidoClienteDataClass> datosClientes,
-                                             ArrayList<Trabajador> trabajadores, String parteNombreArchivo, String emailAdmin) {
+                                             ArrayList<Trabajador> trabajadores, String parteNombreArchivo, String emailAdmin,
+                                             DAOManager dao, DaoPedidosSQL daoPedidos) {
         Properties pro = iniciaProperties();
         Workbook libroExcel = new XSSFWorkbook();
         Trabajador trabajadorPedido = null;
@@ -446,7 +445,7 @@ public class Persistencia {
         for (Pedido pedido : pedidos){
             trabajadorPedido = null;
             for (Trabajador trabajador : trabajadores){
-                for (Pedido pedidoTrabajador : trabajador.getPedidosAsignados()){
+                for (Pedido pedidoTrabajador : daoPedidos.readByidTrabajadorAsignado(dao, trabajador.getId())){
                     if (pedidoTrabajador.getId().equals(pedido.getId())) trabajadorPedido = trabajador;
                 }
             }
@@ -485,7 +484,7 @@ public class Persistencia {
             datosCol1.add(pedido.getEstado() == 4 ? "CANCELADO": Utils.fechaAString(pedido.getFechaEntregaEstimada()));
             datosCol1.add(estado);
             datosCol1.add((trabajadorPedido == null ? "Sin trabajador" : trabajadorPedido.getNombre()));
-            datosCol1.add((trabajadorPedido == null ? "Sin trabajador" : trabajadorPedido.getEmail()));
+            datosCol1.add((trabajadorPedido == null ? "Sin trabajador" : trabajadorPedido.getCorreo()));
             datosCol1.add((trabajadorPedido == null ? "Sin trabajador" : String.valueOf(trabajadorPedido.getMovil())));
             datosCol1.add((pedido.getComentario()));
             datosCol1.add("");

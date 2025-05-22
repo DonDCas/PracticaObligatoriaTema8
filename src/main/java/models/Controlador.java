@@ -93,15 +93,6 @@ public class Controlador implements Serializable {
         return  (Trabajador) daoUsuarios.readUserById(dao, daoTrabajador.buscaTrabajadorParaAsignar(dao));
     }
 
-    public boolean hayEmpateTrabajadoresCandidatos(Trabajador candidato) {
-        for(Trabajador trabajador : trabajadores){
-            if (!trabajador.isBaja())
-                if (trabajador != candidato && trabajador.numPedidosPendientes() == candidato.numPedidosPendientes())
-                    return true;
-        }
-        return false;
-    }
-
     public Cliente buscaClienteById(String idCliente) {
         return (Cliente) daoUsuarios.readUserById(dao, idCliente);
     }
@@ -181,22 +172,14 @@ public class Controlador implements Serializable {
     }
 
     public boolean cambiaEstadoPedido(String idPedido, int nuevoEstado) {
-        Cliente cliente = pedidoCliente.get(idPedido);
-        Trabajador trabajador = buscaTrabajadorAsignadoAPedido(idPedido);
-        for (Pedido pedidoBuscado : cliente.getPedidos()){
-            if (pedidoBuscado.getId().equals(idPedido)){
-                if (pedidoBuscado.cambiaEstado(nuevoEstado)){
-                    if (trabajador != null){
-                        for (Pedido pedidoAsignado : trabajador.getPedidosAsignados()){
-                            if (pedidoAsignado.getId().equalsIgnoreCase(idPedido)) pedidoAsignado.cambiaEstado(nuevoEstado);
-                            Persistencia.guardaDatosTrabajador(trabajador);
-                        }
-                    }
-                    Persistencia.guardaDatosCliente(cliente);
-                    Persistencia.registraLogPedidoModificado(buscaPedidoById(idPedido), String.valueOf(nuevoEstado), "Estado");
-                    return true;
-                }
+        if (daoPedidos.updateEstadoPedido(dao, idPedido, nuevoEstado)){
+            Persistencia.registraLogPedidoModificado(idPedido, String.valueOf(nuevoEstado), "Estado");
+            Trabajador trabajadorAsignado = buscaTrabajadorAsignadoAPedido(idPedido);
+            if (trabajadorAsignado != null){
+                String mensaje = "Pedido: "+idPedido+" ha modificado su estado";
+                Telegram.modificaPedidoMensajeTelegram(mensaje,String.valueOf(trabajadorAsignado.getIdTelegram()));
             }
+            return true;
         }
         return false;
     }
@@ -214,10 +197,7 @@ public class Controlador implements Serializable {
     }
 
     public Trabajador buscaTrabajadorAsignadoAPedido(String idPedido) {
-        for(Trabajador t : trabajadores)
-            for (Pedido p : t.getPedidosAsignados())
-                if (p.getId().equals(idPedido)) return t;
-        return null;
+        return daoUsuarios.readTrabajadorByIdPedido(dao, idPedido);
     }
 
     public ArrayList<Pedido> pedidosSinTrabajador() {
@@ -229,7 +209,7 @@ public class Controlador implements Serializable {
         for (Pedido pedidoDelTotal : pedidosDeClientes){
             conTrabajador = false;
             for(Trabajador trabajador : trabajadores){
-                for(Pedido pedidoDeTrabajador : trabajador.getPedidosAsignados()){
+                for(Pedido pedidoDeTrabajador : daoPedidos.readByidTrabajadorAsignado(dao, trabajador.getId())){
                     if (pedidoDeTrabajador.getId().equalsIgnoreCase(pedidoDelTotal.getId())) conTrabajador = true;
                 }
             }
@@ -266,34 +246,23 @@ public class Controlador implements Serializable {
 
     //Metodo que devuelve un trabajador buscado mediante su id
     public Trabajador buscaTrabajadorByID(String idTrabajador) {
-        for (Trabajador t : trabajadores) if(t.getId().equals(idTrabajador)) return t;
-        return null;
-    }
-
-    //Metodo que devuelve un pedido supuestamente asignado a un trabajador
-    public Pedido buscaPedidoAsignadoTrabajador(String idTrabajador, String idPedido) {
-        Trabajador trabajador = buscaTrabajadorByID(idTrabajador);
-        if (trabajador != null)
-            for (Pedido p : trabajador.getPedidosAsignados()) if (p.getId().equals(idPedido)) return p;
-        return null;
+        return daoUsuarios.readTrabajadorById(dao, idTrabajador);
     }
 
     public ArrayList<PedidoClienteDataClass> getPedidosCompletadosTrabajador(String idTrabajador){
         Trabajador trabajador = buscaTrabajadorByID(idTrabajador);
         if (trabajador == null) return null;
         ArrayList<PedidoClienteDataClass> resultado = new ArrayList<>();
-        for(Pedido p : trabajador.getPedidosAsignados()) {
+        for(Pedido p : daoPedidos.readByidTrabajadorAsignado(dao, idTrabajador)) {
             if (p.getEstado()>2) resultado.add(new PedidoClienteDataClass(p.getId(), pedidoCliente.get(p.getId())));
         }
         return resultado;
     }
 
-    public ArrayList<PedidoClienteDataClass> getPedidosAsignadosYCompletados(String idTrabajador){
-        Trabajador trabajador = buscaTrabajadorByID(idTrabajador);
-        if (trabajador == null) return null;
+    public ArrayList<PedidoClienteDataClass> getPedidosAsignadosYCompletados(ArrayList<Pedido> pedidosTrabajador){
         ArrayList<PedidoClienteDataClass> resultado = new ArrayList<>();
-        for(Pedido p : trabajador.getPedidosAsignados()) {
-            resultado.add(new PedidoClienteDataClass(p.getId(), pedidoCliente.get(p.getId())));
+        for(Pedido p : pedidosTrabajador) {
+            resultado.add(new PedidoClienteDataClass(p.getId(), daoUsuarios.buscaClienteByIdPedido(dao, p.getId())));
         }
         return resultado;
     }
@@ -489,14 +458,14 @@ public class Controlador implements Serializable {
                 case 2:
                     if (Utils.validaCorreo(nuevoDato)) {
                         if (!existeCorreo(nuevoDato)) {
-                                temp.setEmail(nuevoDato.toLowerCase());
+                                temp.setCorreo(nuevoDato.toLowerCase());
                                 return true;
                         }
                     }
                     return false;
                 case 3:
                     if (Utils.validaClave(nuevoDato)) {
-                        temp.setClave(nuevoDato);
+                        temp.setPass(nuevoDato);
                         return true;
                     }return false;
                 case 4:
@@ -509,37 +478,33 @@ public class Controlador implements Serializable {
     }
 
     //Metodo que guarda los cambios de un trabajador copia en el original
-    public void clonarTrabajadorCopia(Trabajador trabajador, Trabajador trabajadorTemp) {
-        trabajador.setNombre(trabajadorTemp.getNombre());
-        trabajador.setEmail(trabajadorTemp.getEmail());
-        trabajador.setClave(trabajadorTemp.getClave());
-        trabajador.setMovil(trabajadorTemp.getMovil());
-        trabajador.setIdTelegram(trabajadorTemp.getIdTelegram());
-        trabajador.setBaja(trabajadorTemp.isBaja());
-        Persistencia.guardaDatosTrabajador(trabajador);
+    public boolean clonarTrabajadorCopia(Trabajador trabajador, Trabajador trabajadorTemp) {
+        if (daoUsuarios.updateUsuario(dao, trabajadorTemp)){
+            trabajador.setNombre(trabajadorTemp.getNombre());
+            trabajador.setCorreo(trabajadorTemp.getCorreo());
+            trabajador.setPass(trabajadorTemp.getPass());
+            trabajador.setMovil(trabajadorTemp.getMovil());
+            trabajador.setIdTelegram(trabajadorTemp.getIdTelegram());
+            trabajador.setBaja(trabajadorTemp.isBaja());
+            return true;
+        }
+        return false;
     }
 
     public boolean ModificaProduto(Producto productoTemp) {
-// TODO añadir update de la tabla producto para la base de datos
         Producto original = buscaProductoById(productoTemp.getId());
         return daoProductos.updateProducto(dao, original.getId(), productoTemp);
     }
 
     public boolean addComentario(String idPedido, String comentario) {
-        Cliente cliente = pedidoCliente.get(idPedido);
-        Trabajador trabajador = buscaTrabajadorAsignadoAPedido(idPedido);
-        for (Pedido pedidoBuscado : cliente.getPedidos()){
-            if (pedidoBuscado.getId().equals(idPedido)){
-                if (pedidoBuscado.addComentario(comentario)){
-                    if (trabajador != null){
-                        //TODO Añadir envio de mensaje en Telegram
-                        Persistencia.guardaDatosTrabajador(trabajador);
-                    }
-                    Persistencia.guardaDatosCliente(cliente);
-                    Persistencia.registraLogPedidoModificado(buscaPedidoById(idPedido), comentario, "AddComentario");
-                    return true;
-                }
+        if (daoPedidos.updateComentarioPedido(dao, idPedido, comentario)){
+            Persistencia.registraLogPedidoModificado(idPedido, comentario, "AddComentario");
+            Trabajador trabajadorAsignado = buscaTrabajadorAsignadoAPedido(idPedido);
+            if (trabajadorAsignado != null){
+                String mensaje = "Se ha añadido un nuevo comentario al pedido "+idPedido;
+                Telegram.modificaPedidoMensajeTelegram(mensaje,String.valueOf(trabajadorAsignado.getIdTelegram()));
             }
+            return true;
         }
         return false;
     }
@@ -575,14 +540,14 @@ public class Controlador implements Serializable {
     }
 
     //Metodo que quita los pedidos pendientes que tenga un trabajador
-    public void quitarPedidosAsignados(Trabajador trabajador) {
-        trabajador.quitaPedidosPendientes();
-        Persistencia.guardaDatosTrabajador(trabajador);
+    public boolean quitarPedidosAsignados(Trabajador trabajador, ArrayList<Pedido> pedidosAsignados) {
+        if (daoPedidos.quitarPedidosTrabajador(dao, trabajador.getId(), pedidosAsignados)) return true;
+        return false;
     }
 
     //Metodo para buscar un trabajador mediante su correo
     public Trabajador buscaTrabajadorByEmail(String correo) {
-        for(Trabajador t : trabajadores) if(t.getEmail().equalsIgnoreCase(correo)) return t;
+        for(Trabajador t : trabajadores) if(t.getCorreo().equalsIgnoreCase(correo)) return t;
         return null;
     }
 
@@ -615,23 +580,14 @@ public class Controlador implements Serializable {
     }
 
     public boolean cambiaFechaPedido(String idPedido, LocalDate nuevaFecha) {
-        Cliente cliente = pedidoCliente.get(idPedido);
-        Trabajador trabajador = buscaTrabajadorAsignadoAPedido(idPedido);
-        for (Pedido pedidoBuscado : cliente.getPedidos()){
-            if (pedidoBuscado.getId().equals(idPedido)){
-                if (pedidoBuscado.cambiaFechaEntrega(nuevaFecha)){
-                    if (trabajador != null){
-                        //TODO Añadir envio de mensaje en Telegram
-                        for (Pedido pedidoAsignado : trabajador.getPedidosAsignados()){
-                            if (pedidoAsignado.getId().equalsIgnoreCase(idPedido)) pedidoAsignado.cambiaFechaEntrega(nuevaFecha);
-                            Persistencia.guardaDatosTrabajador(trabajador);
-                        }
-                    }
-                    Persistencia.guardaDatosCliente(cliente);
-                    Persistencia.registraLogPedidoModificado(pedidoBuscado, String.valueOf(nuevaFecha), "Cambio Fecha");
-                    return true;
-                }
+        if (daoPedidos.updateFechaEntrega(dao, idPedido, nuevaFecha)){
+            Persistencia.registraLogPedidoModificado(idPedido, String.valueOf(nuevaFecha), "Cambio Fecha");
+            Trabajador trabajadorAsignado = buscaTrabajadorAsignadoAPedido(idPedido);
+            if (trabajadorAsignado != null){
+                String mensaje = "Pedido: "+idPedido+" ha sido actualizado la Fecha de entrega a "+ Utils.fechaAString(nuevaFecha);
+                Telegram.modificaPedidoMensajeTelegram(mensaje,String.valueOf(trabajadorAsignado.getIdTelegram()));
             }
+            return true;
         }
         return false;
     }
@@ -646,21 +602,12 @@ public class Controlador implements Serializable {
 
 
     public void cambiaEstadoPedidoCancelado(String idPedido) {
-        Cliente cliente = pedidoCliente.get(idPedido);
-        Trabajador trabajador = buscaTrabajadorAsignadoAPedido(idPedido);
-        for (Pedido pedidoBuscado : cliente.getPedidos()){
-            if (pedidoBuscado.getId().equals(idPedido)){
-                if (pedidoBuscado.cambiaFechaEntregaCandelado()){
-                    if (trabajador != null){
-                        //TODO Añadir envio de mensaje en Telegram
-                        for (Pedido pedidoAsignado : trabajador.getPedidosAsignados()){
-                            if (pedidoAsignado.getId().equalsIgnoreCase(idPedido)) pedidoAsignado.cambiaFechaEntregaCandelado();
-                            Persistencia.guardaDatosTrabajador(trabajador);
-                        }
-                    }
-                    Persistencia.guardaDatosCliente(cliente);
-                    Persistencia.registraLogPedidoModificado(pedidoBuscado, "Cancelacion Pedido", "Cancelacion de Pedido");
-                }
+        if (daoPedidos.updateFechaEntrega(dao, idPedido, null)){
+            Persistencia.registraLogPedidoModificado(idPedido, "Cancelacion Pedido", "Cancelacion de Pedido");
+            Trabajador trabajadorAsignado = buscaTrabajadorAsignadoAPedido(idPedido);
+            if (trabajadorAsignado != null){
+                String mensaje = "Pedido: "+idPedido+" ha sido actualizado a CANCELADO";
+                Telegram.modificaPedidoMensajeTelegram(mensaje,String.valueOf(trabajadorAsignado.getIdTelegram()));
             }
         }
     }
@@ -709,7 +656,8 @@ public class Controlador implements Serializable {
 
     public void exportarAExcelPedidos(ArrayList<Pedido> pedidos, String nombreArchivo, String email) {
         ArrayList<PedidoClienteDataClass> datosCliente = getTodosPedidosConCliente();
-        Persistencia.exportarAExcelPedidos(pedidos, datosCliente, trabajadores, nombreArchivo, email);
+        ArrayList<Trabajador> trabajadores = daoUsuarios.readAllTrabajadores(dao);
+        Persistencia.exportarAExcelPedidos(pedidos, datosCliente, trabajadores, nombreArchivo, email, dao, daoPedidos);
     }
 
     public String recuperaRuta(String rutaSolicitada) {

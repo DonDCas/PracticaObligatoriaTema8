@@ -12,32 +12,15 @@ public class DaoTrabajadorSQL implements DaoTrabajadores {
 
     @Override
     public String buscaTrabajadorParaAsignar(DAOManager dao) {
-        String sentencia = "SELECT\n" +
-                "    CASE\n" +
-                "        WHEN COUNT(*) = 1 THEN MIN(id_trabajadorAsignado)\n" +
-                "        ELSE NULL\n" +
-                "    END AS trabajadorElegido\n" +
-                "FROM (\n" +
-                "    SELECT pat.id_trabajadorAsignado, COUNT(*) AS num_pedidos\n" +
-                "    FROM Pedido_asignado_trabajador pat\n" +
-                "    JOIN Pedidos p ON pat.id_Pedido = p.id_Pedido\n" +
-                "    JOIN trabajadores t ON pat.id_trabajadorAsignado = t.Id_Trabajador\n" +
-                "    WHERE p.estado <= 1\n" +
-                "      AND t.baja = false\n" +
-                "    GROUP BY pat.id_trabajadorAsignado\n" +
-                ") AS subconsulta\n" +
-                "WHERE num_pedidos = (\n" +
-                "    SELECT MIN(num_pedidos)\n" +
-                "    FROM (\n" +
-                "        SELECT COUNT(*) AS num_pedidos\n" +
-                "        FROM Pedido_asignado_trabajador pat\n" +
-                "        JOIN Pedidos p ON pat.id_Pedido = p.id_Pedido\n" +
-                "        JOIN trabajadores t ON pat.id_trabajadorAsignado = t.Id_Trabajador\n" +
-                "        WHERE p.estado <= 1\n" +
-                "          AND t.baja = false\n" +
-                "        GROUP BY pat.id_trabajadorAsignado\n" +
-                "    ) AS sub2\n" +
-                ");";
+        String sentencia = "SELECT t.Id_Trabajador AS trabajadorElegido, \n" +
+                "       COUNT(pat.id_Pedido) AS num_pedidos\n" +
+                "FROM trabajadores t\n" +
+                "LEFT JOIN Pedido_asignado_trabajador pat ON t.Id_Trabajador = pat.id_trabajadorAsignado\n" +
+                "LEFT JOIN Pedidos p ON pat.id_Pedido = p.id_Pedido AND p.estado <= 1\n" +
+                "WHERE t.baja = false\n" +
+                "GROUP BY t.Id_Trabajador\n" +
+                "ORDER BY num_pedidos ASC\n" +
+                "LIMIT 1;";
         try{
             dao.open();
             PreparedStatement stmt = dao.getConn().prepareStatement(sentencia);

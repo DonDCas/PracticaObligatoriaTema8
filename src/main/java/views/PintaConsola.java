@@ -66,7 +66,7 @@ public class PintaConsola {
         return "";
     }
 
-    public static void pedidoExtendido(Trabajador trabajador, String idPedido, ArrayList<PedidoClienteDataClass> pedidosClientes){
+    /*public static void pedidoExtendido(Trabajador trabajador, String idPedido, ArrayList<PedidoClienteDataClass> pedidosClientes){
         String estado = "";
         Pedido pedidoElegido = null;
         Utils.limpiarPantalla();
@@ -99,7 +99,7 @@ public class PintaConsola {
                         pedidoElegido.getComentario(),pintaProductosPedido(pedidoElegido), pedidoElegido.calculaTotalPedidoSinIVA(),
                         pedidoElegido.calculaIVAPedido(DataIVA.IVA), pedidoElegido.calculaTotalPedidoConIVA(DataIVA.IVA));
             }
-            /*if (pedidoElegido.getEstado()==3){ // Cuando el estado es "Entregado". Eliminado del programa
+            *//*if (pedidoElegido.getEstado()==3){ // Cuando el estado es "Entregado". Eliminado del programa
                 System.out.printf("""
                     ====================== ID Pedido: %s ===============================
                     Estado: %s
@@ -120,7 +120,7 @@ public class PintaConsola {
                         Utils.fechaAString(pedidoElegido.getFechaPedido()), Utils.fechaAString(pedidoElegido.getDeliveryDate()),
                         pedidoElegido.getComentario(),pintaProductosPedido(pedidoElegido), pedidoElegido.calculaTotalPedidoSinIVA(),
                         pedidoElegido.calculaIVAPedido(DataIVA.IVA), pedidoElegido.calculaTotalPedidoConIVA(DataIVA.IVA));
-            }*/
+            }*//*
             if (pedidoElegido.getEstado()==3){ //Cuando el estado es "Canceldo"
                 System.out.printf("""
                     ====================== ID Pedido: %s ===============================
@@ -143,7 +143,7 @@ public class PintaConsola {
                         pedidoElegido.calculaIVAPedido(DataIVA.IVA), pedidoElegido.calculaTotalPedidoConIVA(DataIVA.IVA));
             }
         }
-    }
+    }*/
 
     private static String pintaProductosPedido(Pedido pedidoElegido) {
         String resultado = "";
@@ -155,11 +155,11 @@ public class PintaConsola {
         return resultado;
     }
 
-    public static String pintaHistoricoPedidosDeTrabajador(Trabajador trabajador, ArrayList<PedidoClienteDataClass> pedidosDatosClientes) {
+    public static String pintaHistoricoPedidosDeTrabajador(Trabajador trabajador, ArrayList<PedidoClienteDataClass> pedidosDatosClientes,
+                                                           ArrayList<Pedido> pedidosTrabajador) {
         String estado = "";
         int cont = 1;
         int op = -1;
-        ArrayList<Pedido> pedidosTrabajador = new ArrayList<>(trabajador.getPedidosAsignados());
         Collections.sort(pedidosTrabajador);
         for(Pedido p : pedidosTrabajador){
             if (cont == 1)
@@ -453,11 +453,12 @@ public class PintaConsola {
                 pedidoExtendido.calculaTotalPedidoConIVA(DataIVA.IVA));
     }
 
-    public static String pintaResumenTrabajadores(ArrayList<Trabajador> todoslosTrabajadores) {
+    public static String pintaResumenTrabajadores(Controlador controlador, ArrayList<Trabajador> todoslosTrabajadores) {
         int cont = 1;
         int op = -1;
         do {
             for (Trabajador t : todoslosTrabajadores) {
+                ArrayList<Pedido> pedidosAsignado = controlador.recuperaPedidosAsignadosTrabajador(t);
                 if(cont == 1)
                     System.out.print("""
                         ╔════════════════════════════════════════════════════════════════════════════════════════════╗
@@ -467,7 +468,7 @@ public class PintaConsola {
                         ╠════════════════════════════════════════════════════════════════════════════════════════════╣
                         """);
                 System.out.printf("║ %3s -- Nombre: %15s - NºPedidos pendientes: %2d - NºPedidos Asignados: %2d        ║\n",
-                        cont, t.getNombre(), t.getPedidosPendientes().size(), t.getPedidosAsignados().size());
+                        cont, t.getNombre(), t.getPedidosPendientes(pedidosAsignado).size(), pedidosAsignado.size());
                 if (cont == 10 || t == todoslosTrabajadores.getLast()){
                     System.out.printf("╚════════════════════════════════════════════════════════════════════════════════════════════╝\n");
                     Utils.posicionLista("Trabajador: ", t, todoslosTrabajadores);
@@ -494,7 +495,8 @@ public class PintaConsola {
         return "";
     }
 
-    public static void pintaDatosTrabajador(Trabajador trabajador) {
+    public static void pintaDatosTrabajador(Controlador controlador, Trabajador trabajador) {
+        ArrayList<Pedido> pedidosAsignados = controlador.recuperaPedidosAsignadosTrabajador(trabajador);
         System.out.printf("""
         ╔══════════════════════════════════════════════════════════╗
         ║                 ID TRABAJADOR: %8s                  ║
@@ -512,8 +514,9 @@ public class PintaConsola {
         ║ Nº PEDIDOS COMPLETADOS:  %3d                             ║
         ║                                                          ║
         ╚══════════════════════════════════════════════════════════╝
-       """, trabajador.getId(),trabajador.getNombre(),trabajador.getEmail(), trabajador.getMovil(), trabajador.getIdTelegram(),
-                trabajador.getPedidosAsignados().size(), trabajador.getPedidosPendientes().size(), trabajador.getPedidosCompletados().size());
+       """, trabajador.getId(),trabajador.getNombre(),trabajador.getCorreo(), trabajador.getMovil(), trabajador.getIdTelegram(),
+                pedidosAsignados.size(), trabajador.getPedidosPendientes(pedidosAsignados).size(),
+                trabajador.getPedidosCompletados(pedidosAsignados).size());
     }
 
 
@@ -547,7 +550,7 @@ public class PintaConsola {
                 ║ ID Telegram:           %-10d                        ║
                 ║                                                          ║
                 ╚══════════════════════════════════════════════════════════╝
-                """, trabajador.getId(), trabajador.getNombre(), trabajador.getEmail(), trabajador.getMovil(),
+                """, trabajador.getId(), trabajador.getNombre(), trabajador.getCorreo(), trabajador.getMovil(),
                 trabajador.getIdTelegram());
     }
 
@@ -714,7 +717,7 @@ public class PintaConsola {
             lineas.add(String.format("║ %-10s - Tipo Usuario: %-13s - %-37s - %-45s ║\n",admin.getId(), "Administrador" ,admin.getCorreo(), controlador.ultimoInicioSesionParaAdmin(admin)));
         }
         for (Trabajador trabajador : controlador.getTrabajadores()){
-            lineas.add(String.format("║ %-10s - Tipo Usuario: %-13s - %-37s - %-45s ║\n",trabajador.getId(), "Trabajador" ,trabajador.getEmail(), controlador.ultimoInicioSesionParaAdmin(trabajador)));
+            lineas.add(String.format("║ %-10s - Tipo Usuario: %-13s - %-37s - %-45s ║\n",trabajador.getId(), "Trabajador" ,trabajador.getCorreo(), controlador.ultimoInicioSesionParaAdmin(trabajador)));
         }
         for (Cliente cliente : controlador.getClientes()){
             lineas.add(String.format("║ %-10s - Tipo Usuario: %-13s - %-37s - %-45s ║\n",cliente.getId(), "Cliente" ,cliente.getCorreo(), controlador.ultimoInicioSesionParaAdmin(cliente)));
