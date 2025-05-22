@@ -39,114 +39,6 @@ public class Persistencia {
         if (!directorioRaiz.exists()) directorioRaiz.mkdir();
     }
 
-    //Comprobamos que exista la carpeta donde se guardan los mapas.
-    public static boolean existenDatosMapa() {
-        Properties pro = iniciaProperties();
-        String nombreDirectorio = pro.getProperty("rutaMapa");
-        File directorio = new File(nombreDirectorio);
-        if (!directorio.exists()){
-            directorio.mkdirs();
-            return false;
-        }
-        return true;
-    }
-
-    public static HashMap<String, Cliente> cargaDatosMapa() {
-        Properties pro = iniciaProperties();
-        String nombreDirectorio = pro.getProperty("rutaMapa");
-        try(FileInputStream fis = new FileInputStream(nombreDirectorio+"\\pedidosClientes.map");
-            ObjectInputStream ois = new ObjectInputStream(fis)){
-            return (HashMap<String, Cliente>) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void guardaDatosMapas(HashMap<String, Cliente> pedidoCliente) {
-        Properties pro = iniciaProperties();
-        String nombreDirectorio = pro.getProperty("rutaMapa");
-        try(FileOutputStream fos = new FileOutputStream(nombreDirectorio+"\\pedidosClientes.map");
-            ObjectOutputStream oos = new ObjectOutputStream(fos)){
-            oos.writeObject(pedidoCliente);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    //Comprobamos si existe la carpeta que contiene los datos de los admins
-    public static boolean existenDatosAdmin() {
-        Properties pro = iniciaProperties();
-        File directorioAdmins = new File(pro.getProperty("rutaAdmin"));
-        if (!directorioAdmins.exists()) {
-            directorioAdmins.mkdir();
-            return false;
-        }
-        return true;
-    }
-
-    //Metodo que guarda los datos de los admins generados de una lista
-    public static void guardaAdmins(Controlador controlador) {
-        ArrayList<Admin> admins = controlador.getAdmins();
-        for (Admin admin : admins) {
-            //TODO comprobar si existe el archivo antes de guardarlo
-            guardaAdmin(admin);
-        }
-    }
-
-    //Metodo que guarda un admin en disco
-    private static void guardaAdmin(Admin admin) {
-        Properties pro = iniciaProperties();
-        String id = admin.getId();
-        String directorio = pro.getProperty("rutaAdmin");
-        try (FileOutputStream fos = new FileOutputStream(directorio+"\\"+id+".admin");
-             ObjectOutputStream oos = new ObjectOutputStream(fos)) {
-            oos.writeObject(admin);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    //Metodo que carga los datos de todos los admins
-    public static ArrayList<Admin> cargaDatosAdmin() {
-        Properties pro = new Properties();
-        ArrayList<Admin> admins = new ArrayList<>();
-        try (FileReader fr = new FileReader(RUTA_CONFIG)){
-            pro.load(fr);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        File directorioAdmins = new File(pro.getProperty("rutaAdmin"));
-        String[] archivos = directorioAdmins.list();
-        for (int i = 0; i < archivos.length; i++) {
-            try (FileInputStream fis = new FileInputStream(directorioAdmins.getPath() + "\\" + archivos[i]);
-                 ObjectInputStream ois = new ObjectInputStream(fis)){
-                Object o = ois.readObject();
-                if (o instanceof Admin){
-                    admins.add((Admin) o);
-                }
-            } catch (IOException | ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return admins;
-    }
-
-    public static boolean existenDatosTrabajador() {
-        Properties pro = iniciaProperties();
-        File directorioTrabajadores = new File(pro.getProperty("rutaTrabajadores"));
-        if (!directorioTrabajadores.exists()){
-            directorioTrabajadores.mkdir();
-            return false;
-        }
-        return true;
-    }
-
-    public static void guardaDatosTrabajadores(Controlador controlador) {
-        for (Trabajador trab : controlador.getTrabajadores()){
-            guardaDatosTrabajador(trab);
-        }
-    }
-
     public static void guardaDatosTrabajador(Trabajador trab) {
         Properties pro = iniciaProperties();
         File directorioTrabajadores = new File(pro.getProperty("rutaTrabajadores"));
@@ -156,45 +48,6 @@ public class Persistencia {
             oos.writeObject(trab);
         } catch (IOException e) {
             throw new RuntimeException();
-        }
-    }
-
-    public static ArrayList<Trabajador> cargaDatosTrabajador() {
-        ArrayList<Trabajador> trabajadores = new ArrayList<>();
-        Properties pro = new Properties();
-        try (FileReader fr = new FileReader(RUTA_CONFIG)){
-            pro.load(fr);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        File directorioTrabajadores = new File(pro.getProperty("rutaTrabajadores"));
-        String[] archivos = directorioTrabajadores.list();
-        for (int i = 0; i < archivos.length; i++) {
-            try(FileInputStream fis = new FileInputStream(directorioTrabajadores.getPath()+"\\"+archivos[i]);
-            ObjectInputStream ois = new ObjectInputStream(fis)){
-                Trabajador trabajadorLeido = (Trabajador) ois.readObject();
-                trabajadores.add(trabajadorLeido);
-            } catch (IOException | ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return trabajadores;
-    }
-
-    public static boolean existenDatosCliente() {
-        Properties pro = iniciaProperties();
-        String nombreDirectorio = pro.getProperty("rutaClientes");
-        File directorioClientes = new File(nombreDirectorio);
-        if (!directorioClientes.exists()){
-            directorioClientes.mkdir();
-            return false;
-        }
-        return true;
-    }
-
-    public static void guardaDatosClientes(Controlador controlador) {
-        for(Cliente cliente : controlador.getClientes()){
-            guardaDatosCliente(cliente);
         }
     }
 
@@ -573,7 +426,7 @@ public class Persistencia {
         return true;
     }
 
-    public static void creaFacturaPDF(Cliente cliente, Pedido nuevoPedido) {
+    public static void creaFacturaPDF(Cliente cliente, Pedido nuevoPedido, HashMap<Integer, Integer> cantidadProductos) {
         Properties pro = iniciaProperties();
 
         String plantillaFactura = "<html lang=\"es\" xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
@@ -664,7 +517,7 @@ public class Persistencia {
                 .replace("{{pedido_id}}", String.valueOf(nuevoPedido.getId()))
                 .replace("{{fecha_pedido}}", Utils.fechaAString(nuevoPedido.getFechaPedido()))
                 .replace("{{fecha_entrega}}", Utils.fechaAString(nuevoPedido.getFechaEntregaEstimada()))
-                .replace("{{filas_productos}}", generaFilasHTML(nuevoPedido.getProductos()))
+                .replace("{{filas_productos}}", generaFilasHTML(nuevoPedido.getProductos(), cantidadProductos))
                 .replace("{{total_sin_iva}}", String.format("%.2f", nuevoPedido.calculaTotalPedidoSinIVA()))
                 .replace("{{total_iva}}", String.format("%.2f", nuevoPedido.calculaIVAPedido(DataIVA.IVA)))
                 .replace("{{total_con_iva}}", String.format("%.2f", nuevoPedido.calculaTotalPedidoConIVA(DataIVA.IVA)))
@@ -697,13 +550,14 @@ public class Persistencia {
 
     }
 
-    private static String generaFilasHTML(List<Producto> productos) {
+    private static String generaFilasHTML(List<Producto> productos, HashMap<Integer, Integer> cantidadProductos) {
         StringBuilder sb = new StringBuilder();
         for (Producto p : productos) {
             sb.append("<tr>")
                     .append("<td>").append(p.getMarca()).append("</td>")
                     .append("<td>").append(p.getModelo()).append("</td>")
                     .append("<td>").append(String.format("%.2f", p.getPrecio())).append(" €</td>")
+                    .append("<td>").append(String.format("%3d", cantidadProductos.get(p.getId()))).append(" €</td>")
                     .append("</tr>");
         }
         return sb.toString();
@@ -727,6 +581,26 @@ public class Persistencia {
 
 
     /* No funciona bien
+
+       ___
+        .'/,-Y"     "~-.
+        l.Y             ^.
+        /\               _\_
+       i            ___/"   "\
+       |          /"   "\   o !
+       l         ]     o !__./
+        \ _  _    \.___./    "~\
+         X \/ \            ___./
+        ( \ ___.   _..--~~"   ~`-.
+         ` Z,--   /               \
+           \__.  (   /       ______)
+             \   l  /-----~~" /
+              Y   \          /
+              |    "x______.^
+              |           \
+              |            \
+             /              \_
+
 
     public static void modificaRuta(String rutaAModificadar, String nuevaRuta) {
         Properties pro = iniciaProperties();

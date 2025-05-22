@@ -78,7 +78,9 @@ public class Controlador implements Serializable {
         String idPedido = generaIdPedido();
         if (daoPedidos.clienteRealizaPedido(dao, cliente.getId(), idPedido)){
             if(daoPedidos.insertarLineasPedidos(dao, idPedido, carro, cantidadProductos)){
-                Persistencia.creaFacturaPDF(cliente,daoPedidos.readById(dao, idPedido));
+                Pedido pedidoNuevo = daoPedidos.readById(dao, idPedido);
+                Persistencia.registraLogNuevoPedido(cliente, pedidoNuevo);
+                Persistencia.creaFacturaPDF(cliente, pedidoNuevo, cantidadProductos);
                 cliente.vaciaCarro(dao, daoClientes);
                 Trabajador trabajadorCandidato = buscaTrabajadorCandidatoParaAsignar();
                 if (trabajadorCandidato != null) asignaPedido(idPedido, trabajadorCandidato.getId());
@@ -229,6 +231,7 @@ public class Controlador implements Serializable {
         Trabajador trabajador = (Trabajador) daoUsuarios.readUserById(dao, idTrabajador);
         if (trabajador == null) return false;
         if (daoTrabajador.asignarPedido(dao, idTrabajador, idPedido)){
+            Persistencia.registraLogAsignaPedido(trabajador,pedido);
             Telegram.asignaPedidoMensajeTelegram(pedido, trabajador);
             Email.generarCorreoAsignacionPedido(trabajador, pedido,cliente);
             return true;
