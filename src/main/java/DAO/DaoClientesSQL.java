@@ -3,11 +3,12 @@ package DAO;
 //import com.mysql.cj.xdevapi.PreparableStatement;
 import models.Cliente;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-public class DaoClientesSQL implements DaoClientes{
+public class DaoClientesSQL implements DaoClientes, Serializable {
     @Override
     public boolean updateCorreoValido(DAOManager dao, boolean nuevoValor, Cliente cliente) {
         String sentencia = "UPDATE Clientes SET " +

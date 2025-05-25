@@ -3,11 +3,12 @@ package DAO;
 import models.Pedido;
 import models.Trabajador;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 
-public class DaoTrabajadorSQL implements DaoTrabajadores {
+public class DaoTrabajadorSQL implements DaoTrabajadores, Serializable {
 
 
     @Override

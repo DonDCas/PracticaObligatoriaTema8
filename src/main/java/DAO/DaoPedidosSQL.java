@@ -3,6 +3,7 @@ package DAO;
 import models.Pedido;
 import models.Producto;
 
+import java.io.Serializable;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,7 +12,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class DaoPedidosSQL implements DaoPedidos {
+public class DaoPedidosSQL implements DaoPedidos, Serializable {
 
     @Override
     public ArrayList<Pedido> readAllPedidos(DAOManager dao) {

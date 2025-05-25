@@ -4,10 +4,11 @@ import models.Admin;
 import models.Cliente;
 import models.Trabajador;
 
+import java.io.Serializable;
 import java.sql.*;
 import java.util.ArrayList;
 
-public class DaoUsuariosSQL implements DaoUsuarios {
+public class DaoUsuariosSQL implements DaoUsuarios, Serializable {
 
     @Override
     public boolean compruebaEmail(DAOManager dao, String email) {

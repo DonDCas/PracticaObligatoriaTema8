@@ -370,3 +370,9 @@
 [Inicio de sesion]: Javier Tra;fjrueda92@gmail.com;Trabajador;2025-05-25T00:28:26.873835500
 [Cierre de sesion]: Javier Tra;fjrueda92@gmail.com;Trabajador;2025-05-25T00:33:28.963961700
 [Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-25T00:34:38.230006300
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-25T09:22:15.036026100
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-25T09:23:40.200886
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-25T09:26:38.478805300
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-25T09:30:28.547887800
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-25T09:33:16.303521200
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-25T09:37:38.732406400

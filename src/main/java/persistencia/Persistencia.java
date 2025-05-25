@@ -321,6 +321,7 @@ public class Persistencia {
 
     public static boolean exportaCopiaDeSeguridad(Controlador controlador, String rutaArchivo) {
         Properties pro = iniciaProperties();
+        existeCarpetaContenedora();
         if (rutaArchivo.isEmpty()) rutaArchivo = pro.getProperty("rutaBackUp");
         File directorioBackUp = new File(rutaArchivo);
         if (!directorioBackUp.exists()) directorioBackUp.mkdirs();
@@ -338,13 +339,11 @@ public class Persistencia {
         try (FileInputStream fis = new FileInputStream(rutaArchivoBackup);
              ObjectInputStream ois = new ObjectInputStream(fis)) {
             Object obj = ois.readObject();
-            if (obj instanceof Controlador) {
-                return (Controlador) obj;
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();  // o maneja el error de otra forma
+            return (Controlador) obj;
+        } catch (Exception e) {
+            return null;
         }
-        return null;
+
     }
 
     public static void creaFacturaPDF(Cliente cliente, Pedido nuevoPedido, HashMap<Integer, Integer> cantidadProductos) {

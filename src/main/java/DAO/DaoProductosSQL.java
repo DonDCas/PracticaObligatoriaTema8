@@ -2,6 +2,7 @@ package DAO;
 
 import models.Producto;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,7 +10,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Properties;
 
-public class DaoProductosSQL implements DaoProductos {
+public class DaoProductosSQL implements DaoProductos, Serializable {
 
     public ArrayList<Producto> readAll (DAOManager dao){
         String sentencia = "Select * from Productos";

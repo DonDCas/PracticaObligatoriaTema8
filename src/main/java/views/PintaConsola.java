@@ -748,7 +748,7 @@ public class PintaConsola {
                                     -------------------------------------------------------------------------
                                     
                                     Las Rutas deben ser ruta absoluta.
-                                    Esto quiere debes indicar la ruta de la siguiente manera:
+                                    Esto quiere decir que debes indicar la ruta de la siguiente manera:
                                     C:\\carpeta\\carpeta2
                                     
                                     No hace falta indicar la carpeta que quieras ultima ruta contenedora.
@@ -757,7 +757,7 @@ public class PintaConsola {
                                     
                                     Solo indica la carpeta en la que quieres guardar los datos.
                                     
-                                    Si quieres asegurarte de escribir bien la ruta la ruta copia la ruta
+                                    Si quieres asegurarte de escribir bien la ruta, copia la ruta
                                     de la ventana del explorador de windows y copiala directamente en 
                                     esta app.
                                     
@@ -766,6 +766,26 @@ public class PintaConsola {
                                     Solo puedes introducir una dirección que no sea en la que se encuentra
                                     la aplicación.
                                     
+                                    -------------------------------------------------------------------------
+                                    """);
+        Utils.pulsaEnter();
+    }
+
+    public static void pintaAyudaArchivos() {
+        System.out.println("""
+                                    -------------------------------------------------------------------------
+                                    
+                                    Las Rutas deben ser ruta absoluta.
+                                    Esto quiere debes indicar la ruta de la siguiente manera:
+                                    C:\\carpeta\\carpeta2\\archivo.ext
+                                                                        
+                                    Es importante que indiques el nombre del archivo
+                                    
+                                    Si quieres asegurarte de escribir bien la ruta dirijete al archivo
+                                    que es la copia de backUp pulsa sobre el con el boton derecho
+                                    y en el menu contextual haz clic sobre la opción 
+                                    "Copiar como ruta de acceso".
+                                                                       
                                     -------------------------------------------------------------------------
                                     """);
         Utils.pulsaEnter();

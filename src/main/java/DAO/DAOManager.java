@@ -2,14 +2,15 @@ package DAO;
 
 import persistencia.Persistencia;
 
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-public class DAOManager {
+public class DAOManager implements Serializable {
 
-    private  Connection conn;
+    private transient Connection conn;
     private final String URL;
     private final String USER;
     private final String PASS;

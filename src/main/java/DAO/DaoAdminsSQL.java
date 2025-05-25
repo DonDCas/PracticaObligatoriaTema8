@@ -3,12 +3,13 @@ package DAO;
 import models.Admin;
 import models.Producto;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class DaoAdminsSQL implements DaoAdmins {
+public class DaoAdminsSQL implements DaoAdmins, Serializable {
     @Override
     public ArrayList<Admin> readAll(DAOManager dao) {
         String sentencia = "select U.* from Usuarios U inner Join Admins A on U.Id = A.Id_Admin";

@@ -599,17 +599,22 @@ public class Main {
             switch (op) {
                 case 1 -> realizarCopiaSeguridad(controlador, user);
                 case 2 -> cargarCopiaSeguridad(controlador, user);
-                default -> realizarCopiaSeguridad(controlador, user);
+                default -> Utils.pulsaEnter("Opción incorrecta.");
+            }
+            if (op == 1 || op==2){
+                Utils.veteADormir("Volviendo al menu principal");
+                op = 0;
             }
         } while (op != 0);
     }
 
     private static void cargarCopiaSeguridad(Controlador controlador, Admin user) {
         Utils.limpiarPantalla();
-        PintaConsola.pintaAyudaRutas();
+        PintaConsola.pintaAyudaArchivos();
         String rutaArchivo = pedirPorTeclado("Introduce la ruta en la que se encuentra el archivo de backup: ");
         Controlador copiaControlador = controlador.importarCopiaDeSeguridad(rutaArchivo);
         if (copiaControlador != null){
+            controlador = copiaControlador;
             Utils.pulsaEnter("Se ha cargado la copia de seguiradad.");
 
         }else Utils.pulsaEnter("Hubo algun error al importar la copia de seguridad.");
