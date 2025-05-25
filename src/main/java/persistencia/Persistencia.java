@@ -39,66 +39,6 @@ public class Persistencia {
         if (!directorioRaiz.exists()) directorioRaiz.mkdir();
     }
 
-    public static void guardaDatosTrabajador(Trabajador trab) {
-        Properties pro = iniciaProperties();
-        File directorioTrabajadores = new File(pro.getProperty("rutaTrabajadores"));
-        String nombreArchivo = trab.getId()+".trab";
-        try (FileOutputStream fos = new FileOutputStream(directorioTrabajadores+"\\"+nombreArchivo);
-             ObjectOutputStream oos = new ObjectOutputStream(fos)){
-            oos.writeObject(trab);
-        } catch (IOException e) {
-            throw new RuntimeException();
-        }
-    }
-
-    public static void guardaDatosCliente(Cliente cliente) {
-        Properties pro = iniciaProperties();
-        String nombreDirectorio = pro.getProperty("rutaClientes");
-        File directorioCliente = new File(nombreDirectorio);
-        String nombreArchivo = cliente.getId()+".cliente";
-        try(FileOutputStream fos = new FileOutputStream(directorioCliente+"\\"+nombreArchivo);
-        ObjectOutputStream oos = new ObjectOutputStream(fos)){
-            oos.writeObject(cliente);
-        }catch (IOException e){
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static ArrayList<Cliente> cargaDatosCliente() {
-        Properties pro = iniciaProperties();
-        ArrayList<Cliente> resultados = new ArrayList<>();
-        String nombreDirectorio = pro.getProperty("rutaClientes");
-        File directorioCliente = new File(nombreDirectorio);
-        String[] archivos = directorioCliente.list();
-        for (int i = 0; i < archivos.length; i++) {
-            try(FileInputStream fis = new FileInputStream(directorioCliente+"\\"+archivos[i]);
-            ObjectInputStream ois = new ObjectInputStream(fis)){
-                Cliente clie = (Cliente) ois.readObject();
-                resultados.add(clie);
-            }catch (IOException | ClassNotFoundException e){
-                throw new RuntimeException(e);
-            }
-        }
-
-        return resultados;
-    }
-
-    public static boolean existenDatosProducto() {
-        Properties pro = iniciaProperties();
-        File directorioProductos = new File(pro.getProperty("rutaProductos"));
-        if (!directorioProductos.exists()){
-            directorioProductos.mkdirs();
-            return false;
-        }
-        return true;
-    }
-
-    public static void guardaDatosProductos(ArrayList<Producto> catalogo) {
-        for (Producto p : catalogo){
-            guardaDatosProducto(p);
-        }
-    }
-
     public static void guardaDatosProducto(Producto p) {
         Properties pro = iniciaProperties();
         String nombreDirectorio = pro.getProperty("rutaProductos");
@@ -111,25 +51,6 @@ public class Persistencia {
         }catch (IOException e){
             throw new RuntimeException(e);
         }
-    }
-
-    public static ArrayList<Producto> cargaDatosProducto() {
-        Properties pro = iniciaProperties();
-        ArrayList<Producto> resultado = new ArrayList<>();
-        String nombreDirectorio = pro.getProperty("rutaProductos");
-        File directorioProductos = new File(nombreDirectorio);
-        if (!directorioProductos.exists()) return null;
-        String[] archivos = directorioProductos.list();
-        for (int i = 0; i < archivos.length; i++) {
-            try(FileInputStream fis = new FileInputStream(nombreDirectorio+"\\"+archivos[i]);
-                ObjectInputStream ois = new ObjectInputStream(fis)){
-                Producto temp = (Producto) ois.readObject();
-                resultado.add(temp);
-            } catch (IOException | ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return resultado;
     }
 
     public static boolean registraLogInicioSesion(Object user) {
@@ -293,13 +214,13 @@ public class Persistencia {
                                              DAOManager dao, DaoPedidosSQL daoPedidos) {
         Properties pro = iniciaProperties();
         Workbook libroExcel = new XSSFWorkbook();
-        Trabajador trabajadorPedido = null;
+        Trabajador trabajadorDelPedido = null;
         PedidoClienteDataClass datosCliente = null;
         for (Pedido pedido : pedidos){
-            trabajadorPedido = null;
+            trabajadorDelPedido = null;
             for (Trabajador trabajador : trabajadores){
                 for (Pedido pedidoTrabajador : daoPedidos.readByidTrabajadorAsignado(dao, trabajador.getId())){
-                    if (pedidoTrabajador.getId().equals(pedido.getId())) trabajadorPedido = trabajador;
+                    if (pedidoTrabajador.getId().equals(pedido.getId())) trabajadorDelPedido = trabajador;
                 }
             }
             for (PedidoClienteDataClass cliente : datosClientes){
@@ -326,7 +247,7 @@ public class Persistencia {
                     "Nombre Trabajador Asignado", "Correo Trabajador", "Telefono Trabajador", "Comentarios del pedido",
                     "PRODUCTOS"));
             for (int i = 0; i<pedido.getProductos().size(); i++){
-                titulos.add("Producto "+ i);
+                titulos.add("Producto "+ i+1);
             }
             titulos.addAll(Arrays.asList("Precio Total Sin IVA", "Precio Total Con IVA"));
 
@@ -336,14 +257,14 @@ public class Persistencia {
                     String.valueOf(datosCliente.getMovilCliente()), Utils.fechaAString(pedido.getFechaPedido())));
             datosCol1.add(pedido.getEstado() == 4 ? "CANCELADO": Utils.fechaAString(pedido.getFechaEntregaEstimada()));
             datosCol1.add(estado);
-            datosCol1.add((trabajadorPedido == null ? "Sin trabajador" : trabajadorPedido.getNombre()));
-            datosCol1.add((trabajadorPedido == null ? "Sin trabajador" : trabajadorPedido.getCorreo()));
-            datosCol1.add((trabajadorPedido == null ? "Sin trabajador" : String.valueOf(trabajadorPedido.getMovil())));
+            datosCol1.add((trabajadorDelPedido == null ? "Sin trabajador" : trabajadorDelPedido.getNombre()));
+            datosCol1.add((trabajadorDelPedido == null ? "Sin trabajador" : trabajadorDelPedido.getCorreo()));
+            datosCol1.add((trabajadorDelPedido == null ? "Sin trabajador" : String.valueOf(trabajadorDelPedido.getMovil())));
             datosCol1.add((pedido.getComentario()));
             datosCol1.add("");
             String datosProducto = "";
-            for (int i = 0; i<pedido.getProductos().size(); i++){
-                datosProducto = String.format("%s - %s", pedido.getProductos().get(i).getMarca(), pedido.getProductos().get(i).getModelo());
+            for (Producto p : pedido.getProductos()){
+                datosProducto = String.format("%s - %s - PRECIO: %f €", p.getMarca(), p.getModelo(), p.getPrecio());
                 datosCol1.add(datosProducto);
             }
             datosCol1.addAll(Arrays.asList(String.format("%7.2f",pedido.calculaTotalPedidoSinIVA()),
@@ -353,8 +274,8 @@ public class Persistencia {
             for (int i = 0; i < 15; i++) {
                 datosCol2.add("-");
             }
-            for (int i = 0; i<pedido.getProductos().size(); i++){
-                datosCol2.add("Precio: ");
+            for (Producto p : pedido.getProductos()){
+                datosCol2.add("x"+pedido.getCantidadProductos().get(p.getId()));
             }
             datosCol2.add("-");
             datosCol2.add("-");
@@ -363,8 +284,8 @@ public class Persistencia {
             for (int i = 0; i < 15; i++) {
                 datosCol3.add("-");
             }
-            for (int i = 0; i<pedido.getProductos().size(); i++){
-                datosCol3.add(String.format("%7.2f",pedido.getProductos().get(i).getPrecio()));
+            for (Producto p : pedido.getProductos()){
+                datosCol3.add(String.format("%7.2f",(p.getPrecio()*pedido.getCantidadProductos().get(p.getId()))));
             }
             datosCol3.add("-");
             datosCol3.add("-");
@@ -398,22 +319,9 @@ public class Persistencia {
 
     }
 
-    public static boolean exportaCopiaDeSeguridad(Controlador controlador) {
-        Properties pro = iniciaProperties();
-        String nombreDirectorio = pro.getProperty("rutaBackUp");
-        File directorioBackUp = new File(nombreDirectorio);
-        if (!directorioBackUp.exists()) directorioBackUp.mkdirs();
-        String nombreArchivo = nombreDirectorio + "\\" + String.valueOf(LocalDate.now()) + ".backup";
-        try (FileOutputStream fos = new FileOutputStream(nombreArchivo);
-             ObjectOutputStream oos = new ObjectOutputStream(fos)){
-            oos.writeObject(controlador);
-        }catch (IOException e){
-            return false;
-        }
-        return true;
-    }
-
     public static boolean exportaCopiaDeSeguridad(Controlador controlador, String rutaArchivo) {
+        Properties pro = iniciaProperties();
+        if (rutaArchivo.isEmpty()) rutaArchivo = pro.getProperty("rutaBackUp");
         File directorioBackUp = new File(rutaArchivo);
         if (!directorioBackUp.exists()) directorioBackUp.mkdirs();
         String nombreArchivo = rutaArchivo + "\\" + String.valueOf(LocalDate.now()) + ".backup";
@@ -424,6 +332,19 @@ public class Persistencia {
             return false;
         }
         return true;
+    }
+
+    public static Controlador importaCopiaDeSeguridad(String rutaArchivoBackup) {
+        try (FileInputStream fis = new FileInputStream(rutaArchivoBackup);
+             ObjectInputStream ois = new ObjectInputStream(fis)) {
+            Object obj = ois.readObject();
+            if (obj instanceof Controlador) {
+                return (Controlador) obj;
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();  // o maneja el error de otra forma
+        }
+        return null;
     }
 
     public static void creaFacturaPDF(Cliente cliente, Pedido nuevoPedido, HashMap<Integer, Integer> cantidadProductos) {
@@ -481,6 +402,7 @@ public class Persistencia {
                 "            <tr>\n" +
                 "                <th>Marca</th>\n" +
                 "                <th>Modelo</th>\n" +
+                "                <th>Cantidad del Producto</th>\n" +
                 "                <th>Precio (€)</th>\n" +
                 "            </tr>\n" +
                 "        </thead>\n" +
@@ -517,7 +439,7 @@ public class Persistencia {
                 .replace("{{pedido_id}}", String.valueOf(nuevoPedido.getId()))
                 .replace("{{fecha_pedido}}", Utils.fechaAString(nuevoPedido.getFechaPedido()))
                 .replace("{{fecha_entrega}}", Utils.fechaAString(nuevoPedido.getFechaEntregaEstimada()))
-                .replace("{{filas_productos}}", generaFilasHTML(nuevoPedido.getProductos(), cantidadProductos))
+                .replace("{{filas_productos}}", generaFilasHTML(nuevoPedido.getProductos(), nuevoPedido.getCantidadProductos()))
                 .replace("{{total_sin_iva}}", String.format("%.2f", nuevoPedido.calculaTotalPedidoSinIVA()))
                 .replace("{{total_iva}}", String.format("%.2f", nuevoPedido.calculaIVAPedido(DataIVA.IVA)))
                 .replace("{{total_con_iva}}", String.format("%.2f", nuevoPedido.calculaTotalPedidoConIVA(DataIVA.IVA)))
@@ -556,8 +478,8 @@ public class Persistencia {
             sb.append("<tr>")
                     .append("<td>").append(p.getMarca()).append("</td>")
                     .append("<td>").append(p.getModelo()).append("</td>")
-                    .append("<td>").append(String.format("%.2f", p.getPrecio())).append(" €</td>")
-                    .append("<td>").append(String.format("%3d", cantidadProductos.get(p.getId()))).append(" €</td>")
+                    .append("<td>").append(String.format("x%3d", cantidadProductos.get(p.getId()))).append("</td>")
+                    .append("<td>").append(String.format("%.2f", (p.getPrecio()*cantidadProductos.get(p.getId())))).append(" €</td>")
                     .append("</tr>");
         }
         return sb.toString();

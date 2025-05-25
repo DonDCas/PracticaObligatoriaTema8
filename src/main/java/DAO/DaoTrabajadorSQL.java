@@ -12,15 +12,39 @@ public class DaoTrabajadorSQL implements DaoTrabajadores {
 
     @Override
     public String buscaTrabajadorParaAsignar(DAOManager dao) {
-        String sentencia = "SELECT t.Id_Trabajador AS trabajadorElegido, \n" +
-                "       COUNT(pat.id_Pedido) AS num_pedidos\n" +
-                "FROM trabajadores t\n" +
-                "LEFT JOIN Pedido_asignado_trabajador pat ON t.Id_Trabajador = pat.id_trabajadorAsignado\n" +
-                "LEFT JOIN Pedidos p ON pat.id_Pedido = p.id_Pedido AND p.estado <= 1\n" +
-                "WHERE t.baja = false\n" +
-                "GROUP BY t.Id_Trabajador\n" +
-                "ORDER BY num_pedidos ASC\n" +
-                "LIMIT 1;";
+        String sentencia = "SELECT\n" +
+                "    CASE\n" +
+                "        WHEN COUNT(*) = 1 THEN MIN(id_trabajadorElegido)\n" +
+                "        ELSE NULL\n" +
+                "    END AS trabajadorElegido\n" +
+                "FROM (\n" +
+                "    SELECT \n" +
+                "        t.Id_Trabajador AS id_trabajadorElegido,\n" +
+                "        COUNT(CASE WHEN p.estado <= 1 THEN 1 END) AS num_pedidos\n" +
+                "    FROM trabajadores t\n" +
+                "    LEFT JOIN Pedido_asignado_trabajador pat \n" +
+                "        ON pat.id_trabajadorAsignado = t.Id_Trabajador\n" +
+                "    LEFT JOIN Pedidos p \n" +
+                "        ON pat.id_Pedido = p.id_Pedido \n" +
+                "           AND p.estado <= 1\n" +
+                "    WHERE t.baja = false\n" +
+                "    GROUP BY t.Id_Trabajador\n" +
+                ") AS subconsulta\n" +
+                "WHERE num_pedidos = (\n" +
+                "    SELECT MIN(num_pedidos)\n" +
+                "    FROM (\n" +
+                "        SELECT \n" +
+                "            COUNT(CASE WHEN p.estado <= 1 THEN 1 END) AS num_pedidos\n" +
+                "        FROM trabajadores t2\n" +
+                "        LEFT JOIN Pedido_asignado_trabajador pat2 \n" +
+                "            ON pat2.id_trabajadorAsignado = t2.Id_Trabajador\n" +
+                "        LEFT JOIN Pedidos p \n" +
+                "            ON pat2.id_Pedido = p.id_Pedido \n" +
+                "               AND p.estado <= 1\n" +
+                "        WHERE t2.baja = false\n" +
+                "        GROUP BY t2.Id_Trabajador\n" +
+                "    ) AS sub2\n" +
+                ");\n";
         try{
             dao.open();
             PreparedStatement stmt = dao.getConn().prepareStatement(sentencia);
@@ -43,6 +67,21 @@ public class DaoTrabajadorSQL implements DaoTrabajadores {
             stmt.executeUpdate();
             return true;
         }catch (Exception e){
+            return false;
+        }
+    }
+
+    @Override
+    public boolean updateBaja(DAOManager dao, String idTrabajador, boolean nuevoDato) {
+        String sentencia = "UPDATE trabajadores SET baja = ? WHERE id_trabajador=?";
+        try{
+            dao.open();
+            PreparedStatement stmt = dao.getConn().prepareStatement(sentencia);
+            stmt.setBoolean(1, nuevoDato);
+            stmt.setString(2, idTrabajador);
+            stmt.executeUpdate();
+            return true;
+        } catch (Exception e) {
             return false;
         }
     }

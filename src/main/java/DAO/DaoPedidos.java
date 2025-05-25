@@ -31,4 +31,5 @@ public interface DaoPedidos {
     boolean updateFechaEntrega(DAOManager dao, String idPedido, LocalDate nuevaFecha);
 
     boolean quitarPedidosTrabajador(DAOManager dao, String idTrabajador, ArrayList<Pedido> pedidosAsignados);
+
 }

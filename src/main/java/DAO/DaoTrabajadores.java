@@ -11,4 +11,6 @@ public interface DaoTrabajadores {
 
     boolean asignarPedido(DAOManager dao, String idTrabajador, String idPedido);
 
+    boolean updateBaja(DAOManager dao, String idTrabajador, boolean nuevoDato);
+
 }

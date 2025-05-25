@@ -117,7 +117,8 @@ public class Email {
         for (Producto producto : pedido.getProductos()) {
             productosHTML.append("<li>")
                     .append(producto.getMarca()).append(" ")
-                    .append(producto.getModelo()).append(" - ")
+                    .append(producto.getModelo()).append(" ")
+                    .append("x"+pedido.getCantidadProductos().get(producto.getId())).append(" - ")
                     .append(String.format("%.2f", producto.getPrecio())).append(" €")
                     .append("</li>");
         }
@@ -207,8 +208,9 @@ public class Email {
         for (Producto producto : pedido.getProductos()) {
             productosHTML.append("<li>")
                     .append(producto.getMarca()).append(" ")
-                    .append(producto.getModelo()).append(" - ")
-                    .append(String.format("%.2f", producto.getPrecio())).append(" €")
+                    .append(producto.getModelo()).append(" ")
+                    .append("x"+pedido.getCantidadProductos().get(producto.getId())).append(" - ")
+                    .append(String.format("%.2f", (producto.getPrecio() * pedido.getCantidadProductos().get(producto.getId())))).append(" €")
                     .append("</li>");
         }
 

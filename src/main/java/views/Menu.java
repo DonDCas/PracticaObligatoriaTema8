@@ -434,4 +434,18 @@ public class Menu {
                  ╚════════════════════════════════════════════════════════════════════════╝
                  """,modoInvitado);
     }
+
+    public static void menuSeguridad() {
+        System.out.printf("""
+                 ╔════════════════════════════════════════════════════════════════════════╗
+                 ║                     Configuración de la Aplicación                     ║
+                 ╠════════════════════════════════════════════════════════════════════════╣
+                 ║                                                                        ║
+                 ║  1- Realizar una copia de seguridad.                                   ║
+                 ║  2- Cargar copia de seguridad.                                         ║
+                 ║                                                                        ║
+                 ║  0- Volver al menu Principal                                           ║
+                 ╚════════════════════════════════════════════════════════════════════════╝
+                 """);
+    }
 }

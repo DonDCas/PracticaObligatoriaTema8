@@ -89,7 +89,21 @@ public class DaoUsuariosSQL implements DaoUsuarios {
 
     @Override
     public boolean insertaTrabajador(DAOManager dao, String id, String correo, String pass, String nombre, int movil, int idTelegram) {
-        return false;
+        String sentencia = "{Call InsertarTrabajador (?,?,?,?,?,?)}";
+        try{
+            dao.open();
+            CallableStatement stmt = dao.getConn().prepareCall(sentencia);
+            stmt.setString(1,id);
+            stmt.setString(2,correo);
+            stmt.setString(3, pass);
+            stmt.setString(4,nombre);
+            stmt.setInt(5,movil);
+            stmt.setInt(6,idTelegram);
+            stmt.execute();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
@@ -150,7 +164,7 @@ public class DaoUsuariosSQL implements DaoUsuarios {
     public ArrayList<Trabajador> readAllTrabajadores(DAOManager dao) {
         String sentencia = "Select u.*, t.* from Usuarios u " +
                 "LEFT JOIN trabajadores t on u.id=t.Id_Trabajador " +
-                "WHERE u.Id Like ('C%')";
+                "WHERE u.Id Like ('T%')";
         return consultaArrayListTrabajadores(dao, sentencia);
     }
 
@@ -205,6 +219,25 @@ public class DaoUsuariosSQL implements DaoUsuarios {
             dao.open();
             PreparedStatement stmt = dao.getConn().prepareStatement(sentencia);
             stmt.setString(1,idTrabajador);
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+            return leerFilaTrabajadores(rs);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @Override
+    public Trabajador readTrabajadorByCorreo(DAOManager dao, String correo) {
+        String sentencia = "Select u.*, t.* " +
+                "from Usuarios u " +
+                "inner join trabajadores t " +
+                "on u.id=t.id_trabajador " +
+                "where correo= ?;";
+        try {
+            dao.open();
+            PreparedStatement stmt = dao.getConn().prepareStatement(sentencia);
+            stmt.setString(1,correo);
             ResultSet rs = stmt.executeQuery();
             rs.next();
             return leerFilaTrabajadores(rs);
@@ -305,7 +338,8 @@ public class DaoUsuariosSQL implements DaoUsuarios {
                 rs.getString("Pass"),
                 rs.getString("Nombre"),
                 rs.getInt("Movil"),
-                rs.getInt("idTelegram")
+                rs.getInt("idTelegram"),
+                rs.getBoolean("baja")
         );
     }
 

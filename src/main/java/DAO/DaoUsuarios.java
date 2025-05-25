@@ -37,4 +37,6 @@ public interface DaoUsuarios {
     Trabajador readTrabajadorByIdPedido(DAOManager dao, String idPedido);
 
     Trabajador readTrabajadorById(DAOManager dao, String idTrabajador);
+
+    Trabajador readTrabajadorByCorreo(DAOManager dao, String correo);
 }

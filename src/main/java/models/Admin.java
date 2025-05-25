@@ -6,6 +6,6 @@ public class Admin extends Usuario {
 
     // Constructor
     public Admin(String id, String nombre, String clave, String email, int movil) {
-        super(id, nombre, email, clave, movil);
+        super(id, nombre, clave, email, movil);
     }
 }

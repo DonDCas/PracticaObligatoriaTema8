@@ -20,7 +20,6 @@ public class Controlador implements Serializable {
     private DaoClientesSQL daoClientes;
     private DaoTrabajadorSQL daoTrabajador;
     private DaoPedidosSQL daoPedidos;
-    ArrayList<Trabajador> trabajadores;
     HashMap<String,Cliente> pedidoCliente;
 
     //Constructor
@@ -190,12 +189,15 @@ public class Controlador implements Serializable {
         if (!Utils.validaCorreo(email)) return false;
         if (!Utils.validaClave(clave)) return false;
         if (!Utils.validaTelefono(movil)) return false;
+        String id = generaIdTrabajador();
         //if (!Utils.validarIdTelegram(idTelegram)) return false;
-        Trabajador nuevoTrabajador = new Trabajador(generaIdTrabajador(), email, clave, nombre, movil, idTelegram);
-        trabajadores.add(nuevoTrabajador);
-        Email.generarCorreoBienvenida(nuevoTrabajador);
-        Persistencia.guardaDatosTrabajador(nuevoTrabajador);
-        return true;
+        if (daoUsuarios.insertaTrabajador(dao,id,email,clave,nombre,
+                movil, idTelegram)){
+            Trabajador nuevoTrabajador = new Trabajador(id, email, clave, nombre, movil, idTelegram, false);
+            Email.generarCorreoBienvenida(nuevoTrabajador);
+            return true;
+        }
+        return false;
     }
 
     public Trabajador buscaTrabajadorAsignadoAPedido(String idPedido) {
@@ -204,18 +206,10 @@ public class Controlador implements Serializable {
 
     public ArrayList<Pedido> pedidosSinTrabajador() {
         ArrayList<Pedido> pedidosSinTrabajador = new ArrayList<>();
-        ArrayList<Pedido> pedidosDeClientes = new ArrayList<>();
-        boolean conTrabajador = false;
-        for(Cliente cliente : daoUsuarios.readAllClientes(dao)) pedidosDeClientes.addAll(cliente.getPedidos());
-
-        for (Pedido pedidoDelTotal : pedidosDeClientes){
-            conTrabajador = false;
-            for(Trabajador trabajador : trabajadores){
-                for(Pedido pedidoDeTrabajador : daoPedidos.readByidTrabajadorAsignado(dao, trabajador.getId())){
-                    if (pedidoDeTrabajador.getId().equalsIgnoreCase(pedidoDelTotal.getId())) conTrabajador = true;
-                }
-            }
-            if (!conTrabajador) pedidosSinTrabajador.add(pedidoDelTotal);
+        ArrayList<Pedido> pedidosTotales = daoPedidos.readAllPedidos(dao);
+        for (Pedido pedido : pedidosTotales){
+            Trabajador trabajadorAsignado = daoUsuarios.readTrabajadorByIdPedido(dao, pedido.getId());
+            if (trabajadorAsignado == null) pedidosSinTrabajador.add(pedido);
         }
         return pedidosSinTrabajador;
     }
@@ -257,7 +251,7 @@ public class Controlador implements Serializable {
         if (trabajador == null) return null;
         ArrayList<PedidoClienteDataClass> resultado = new ArrayList<>();
         for(Pedido p : daoPedidos.readByidTrabajadorAsignado(dao, idTrabajador)) {
-            if (p.getEstado()>2) resultado.add(new PedidoClienteDataClass(p.getId(), pedidoCliente.get(p.getId())));
+            if (p.getEstado()>2) resultado.add(new PedidoClienteDataClass(p.getId(), daoUsuarios.buscaClienteByIdPedido(dao, p.getId())));
         }
         return resultado;
     }
@@ -323,6 +317,7 @@ public class Controlador implements Serializable {
 
     public String generaIdTrabajador() {
         String id;
+        ArrayList<Trabajador> trabajadores = daoUsuarios.readAllTrabajadores(dao);
         boolean existeID;
         do{
             existeID = false;
@@ -514,7 +509,7 @@ public class Controlador implements Serializable {
 
     public ArrayList<PedidoClienteDataClass> getTodosPedidosConCliente() {ArrayList<PedidoClienteDataClass> resultado = new ArrayList<>();
         for(Pedido p : getTodosPedidos()) {
-            resultado.add(new PedidoClienteDataClass(p.getId(), pedidoCliente.get(p.getId())));
+            resultado.add(new PedidoClienteDataClass(p.getId(), daoUsuarios.buscaClienteByIdPedido(dao, p.getId())));
         }
         return resultado;
     }
@@ -532,14 +527,13 @@ public class Controlador implements Serializable {
 
     public ArrayList<Trabajador> getTrabajadoresDeAlta(){
         ArrayList<Trabajador> resultado = new ArrayList<>();
-        for(Trabajador t : trabajadores) if (!t.isBaja()) resultado.add(new Trabajador(t));
+        for(Trabajador t : daoUsuarios.readAllTrabajadores(dao)) if (!t.isBaja()) resultado.add(new Trabajador(t));
         return resultado;
     }
 
     //Da de baja a un trabajador dejando sus datos guardados por si volvieramos a darlo de alta.
-    public void darBajaTrabajador(Trabajador trabajadorElegido) {
-        trabajadorElegido.setBaja(true);
-        Persistencia.guardaDatosTrabajador(trabajadorElegido);
+    public boolean darBajaTrabajador(Trabajador trabajadorElegido) {
+        return daoTrabajador.updateBaja(dao, trabajadorElegido.getId(),true);
     }
 
     //Metodo que quita los pedidos pendientes que tenga un trabajador
@@ -550,13 +544,11 @@ public class Controlador implements Serializable {
 
     //Metodo para buscar un trabajador mediante su correo
     public Trabajador buscaTrabajadorByEmail(String correo) {
-        for(Trabajador t : trabajadores) if(t.getCorreo().equalsIgnoreCase(correo)) return t;
-        return null;
+        return daoUsuarios.readTrabajadorByCorreo(dao, correo);
     }
 
-    public void darAltaTrabajador(Trabajador trabajadorDeBaja) {
-        trabajadorDeBaja.setBaja(false);
-        Persistencia.guardaDatosTrabajador(trabajadorDeBaja);
+    public boolean darAltaTrabajador(Trabajador trabajadorDeBaja) {
+        return daoTrabajador.updateBaja(dao, trabajadorDeBaja.getId(),false);
     }
 
 
@@ -649,10 +641,8 @@ public class Controlador implements Serializable {
 
     public ArrayList<Pedido> getPedidosSinCompletar() {
         ArrayList<Pedido> pedidosNoCompletados = new ArrayList<>();
-        for (Cliente cli : daoUsuarios.readAllClientes(dao)){
-            for(Pedido pedidoCliente : cli.getPedidos()){
-                if(pedidoCliente.getEstado() < 2) pedidosNoCompletados.add(pedidoCliente);
-            }
+        for (Pedido p : daoPedidos.readAllPedidos(dao)){
+                if(p.getEstado() < 2) pedidosNoCompletados.add(p);
         }
         return pedidosNoCompletados;
     }
@@ -694,5 +684,13 @@ public class Controlador implements Serializable {
 
     public ArrayList<Pedido> recuperaPedidosAsignadosTrabajador(Trabajador trabajador) {
         return daoPedidos.readByidTrabajadorAsignado(dao, trabajador.getId());
+    }
+
+    public boolean exportaCopiaDeSegridad(String ruta) {
+        return Persistencia.exportaCopiaDeSeguridad(this, ruta);
+    }
+
+    public Controlador importarCopiaDeSeguridad(String rutaArchivo) {
+        return Persistencia.importaCopiaDeSeguridad(rutaArchivo);
     }
 }

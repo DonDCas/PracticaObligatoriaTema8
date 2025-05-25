@@ -28,25 +28,32 @@ public class PintaConsola {
         String estado = "";
         Collections.sort(pedidosTrabajador);
         String idPedido = "";
-        int cont = 1;
+        int cont = 0;
         int op = -1;
+        int cantidadProductos = 0;
         for(Pedido p : pedidosTrabajador){
-            if (cont == 1)
+            if (cont == 0){
                 System.out.printf("""
-                ╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
-                ║                                                         LISTADO DE PEDIDOS                                                       ║
-                ╠══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣
+                ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+                ║                                                            LISTADO DE PEDIDOS                                                         ║
+                ╠═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣
                 """);
+                cont++;
+            }
+            cantidadProductos = 0;
+            for (Producto producto : p.getProductos()) cantidadProductos += p.getCantidadProductos().get(producto.getId());
             PedidoClienteDataClass datosCliente = null;
             for (PedidoClienteDataClass datos : pedidosDatosClientes)
                 if (p.getId().equals(datos.getIdPedido())) datosCliente = datos;
             estado = estadoPedido(p.getEstado());
-            if (p.getEstado()<3)
-                System.out.printf("║ %3d. -- Estado: %-15s Fecha de Pedido: %s - NºProductos: %d - Precio(SinIVA): %7.2f e - ID:Cliente: %8s  ║\n",
-                        cont, estado, Utils.fechaAString(p.getFechaPedido()), p.numArticulos(), p.calculaTotalPedidoConIVA(DataIVA.IVA), datosCliente.getNombreCliente());
+            if (p.getEstado()<3){
+                System.out.printf("║ %3d. -- Estado: %-15s Fecha de Pedido: %s - NºProductos: %3d - Precio(SinIVA): %10.2f e - ID:Cliente: %8s  ║\n",
+                        cont, estado, Utils.fechaAString(p.getFechaPedido()), cantidadProductos, p.calculaTotalPedidoConIVA(DataIVA.IVA), datosCliente.getIdCliente());
+                cont++;
+            }
 
             if (cont == 5 || p == pedidosTrabajador.getLast()){
-                System.out.printf("╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n");
+                System.out.printf("╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n");
                 Utils.posicionLista("Pedidos: ", p, pedidosTrabajador);
                 if (pedirPorTecladoSN("Has encontrado el pedido que quieres ver expandido? (S/N): ").equalsIgnoreCase("s")){
                     try{
@@ -55,12 +62,11 @@ public class PintaConsola {
                         System.out.println("No se introdujo un numero. Seguiremos mostranto pedidos");
                     }
                     if (op > 0 && op <= cont){
-                        return pedidosTrabajador.get((pedidosTrabajador.indexOf(p)) - (cont - op)).getId();
+                        return pedidosTrabajador.get((pedidosTrabajador.indexOf(p)) - (cont - op -1)).getId();
                     }
                 }
                 cont = 0;
             }
-            cont ++;
         }
         if (idPedido.isEmpty()) System.out.println("Hemos llegado al final de la lista de pedidos.");
         return "";
@@ -148,8 +154,8 @@ public class PintaConsola {
     private static String pintaProductosPedido(Pedido pedidoElegido) {
         String resultado = "";
         for(Producto p : pedidoElegido.getProductos()){
-            resultado += String.format("║      - %-10s - %-30s (%7.2f)                                        ║",
-                    p.getMarca(), p.getModelo(), p.getPrecio());
+            resultado += String.format("║      - %-10s - %-30s x%3d - %7.2fe                                  ║",
+                    p.getMarca(), p.getModelo(), pedidoElegido.getCantidadProductos().get(p.getId()),p.getPrecio());
             if (!(pedidoElegido.getProductos().getLast() == p)) resultado += "\n";
         }
         return resultado;
@@ -162,21 +168,23 @@ public class PintaConsola {
         int op = -1;
         Collections.sort(pedidosTrabajador);
         for(Pedido p : pedidosTrabajador){
+            int cantidadProductos = 0;
+            for (Producto producto : p.getProductos()) cantidadProductos += p.getCantidadProductos().get(producto.getId());
             if (cont == 1)
                 System.out.printf("""
-                ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
-                ║                                                      HISTORICO DE PEDIDOS                                                     ║
-                ╠═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣
+                ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+                ║                                                         HISTORICO DE PEDIDOS                                                        ║
+                ╠═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣
                 """);
             for (PedidoClienteDataClass datos : pedidosDatosClientes){
                 estado = estadoPedido(p.getEstado());
                 if (datos.getIdPedido().equals(p.getId()))
-                    System.out.printf("║ %2d -- Estado: %-15s Fecha de Pedido: %s - NºProductos: %d - Precio(SinIVA): %7.2f e - ID:Cliente: %8s ║\n",
+                    System.out.printf("║ %2d -- Estado: %-15s Fecha de Pedido: %s - NºProductos: x%3d - Precio(SinIVA): %10.2f e - ID:Cliente: %8s ║\n",
                             cont, estado,Utils.fechaAString(p.getFechaPedido()),
-                            p.getProductos().size(),p.calculaTotalPedidoSinIVA() ,datos.getIdCliente());
+                            cantidadProductos,p.calculaTotalPedidoSinIVA() ,datos.getIdCliente());
             }
             if (cont == 10 || p == pedidosTrabajador.getLast()){
-                System.out.printf("╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n");
+                System.out.printf("╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n");
                 Utils.posicionLista("Pedido: ", p , pedidosTrabajador);
                 if (pedirPorTecladoSN("¿Quieres ver alguno de estos pedidos de forma extendida?(S/N): ").equalsIgnoreCase("s")){
                     do{
@@ -249,7 +257,7 @@ public class PintaConsola {
                 ║                                                                                                         ║
                 ╠═════════════════════════════════════════════════════════════════════════════════════════════════════════╣
                 """);
-                System.out.printf("║ %2d -- Nombre: %10s - Localidad: %15s(%15s) - NºPedidos realizados: %2d ║\n",
+                System.out.printf("║ %2d -- Nombre: %-15s - Localidad: %15s(%-15s) - NºPedidos realizados: %2d ║\n",
                         cont, c.getNombre(), c.getLocalidad(), c.getProvincia(), c.getPedidos().size());
                 if(cont == 5 || c == todoslosClientes.getLast()){
                     System.out.printf("╚═════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n");
@@ -334,21 +342,25 @@ public class PintaConsola {
                 if (cont == 1){
                     Utils.limpiarPantalla();
                     System.out.printf("""
-                    ╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
-                    ║                                                        LISTADO DE PEDIDOS                                                      ║
-                    ╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣
+                    ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+                    ║                                                          LISTADO DE PEDIDOS                                                         ║
+                    ╠═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣
                     """);
+                }
+                int cantidadTotalProductos = 0;
+                for (Producto producto : p.getProductos()){
+                    cantidadTotalProductos += p.getCantidadProductos().get(producto.getId());
                 }
                 for (PedidoClienteDataClass datos : datosClientes){
                     if(datos.getIdPedido().equals(p.getId())){
                         estado = estadoPedido(p.getEstado());
-                        System.out.printf("║ %3d -- Estado: %-15s Fecha de Pedido: %s - NºProductos: %d - Precio(SinIVA): %7.2f e - ID:Cliente: %8s ║\n",
+                        System.out.printf("║ %3d -- Estado: %-15s Fecha de Pedido: %s - NºProductos: %3d - Precio(SinIVA): %10.2f e - ID:Cliente: %8s ║\n",
                                 cont, estado, Utils.fechaAString(p.getFechaPedido()),
-                                p.getProductos().size(),p.calculaTotalPedidoSinIVA() ,datos.getIdCliente());
+                                cantidadTotalProductos,p.calculaTotalPedidoSinIVA() ,datos.getIdCliente());
                     }
                 }
                 if (cont == 10 || p == todoslosPedidos.getLast()){
-                    System.out.printf("╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n");
+                    System.out.printf("╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n");
                     Utils.posicionLista("Predido: ",p,todoslosPedidos);
                     if (pedirPorTecladoSN("¿Quieres elegir alguno de estos pedidos?(S/N): ").equalsIgnoreCase("s")){
                         boolean reintentar;
@@ -373,10 +385,9 @@ public class PintaConsola {
         return "";
     }
 
-    public static void pintaDatosPedidoExtendido(Pedido pedidoExtendido, PedidoClienteDataClass datosCliente) {
+   /* public static void pintaDatosPedidoExtendido(Pedido pedidoExtendido, PedidoClienteDataClass datosCliente) {
         String estado = estadoPedido(pedidoExtendido.getEstado());
         String productos = pintaProductosPedido(pedidoExtendido);
-        //TODO Añadir comentarios
         System.out.printf("""
         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════╗
         ║                                                                                                     ║
@@ -407,7 +418,7 @@ public class PintaConsola {
                 datosCliente.getLocalidadCliente(),datosCliente.getProvinciaCliente(), productos,
                 pedidoExtendido.calculaTotalPedidoSinIVA(), pedidoExtendido.calculaIVAPedido(DataIVA.IVA),
                 pedidoExtendido.calculaTotalPedidoConIVA(DataIVA.IVA));
-    }
+    }*/
 
     public static void pintaDatosPedidoExtendido(Pedido pedidoExtendido, PedidoClienteDataClass datosCliente, Trabajador trabajadorAsignado) {
         String estado = estadoPedido(pedidoExtendido.getEstado());
@@ -415,9 +426,7 @@ public class PintaConsola {
         String comentario = String.format(pedidoExtendido.getComentario().isEmpty()
                 ? "║                                                                                                     ║"
                 : """
-                        ║-----------------------------------------------------------------------------------------------------║
-                          Comentarios: %s
-                        ║-----------------------------------------------------------------------------------------------------║""",pedidoExtendido.getComentario());
+                        ║ Comentarios: %-17s                                                                      ║""",pedidoExtendido.getComentario());
 
         String trabajador = ((trabajadorAsignado != null) ? trabajadorAsignado.getNombre() : "Sin trabajador asignado");
         System.out.printf("""
@@ -434,16 +443,16 @@ public class PintaConsola {
         ║ Email del cliente:         %-40s                                 ║
         ║ Movil del cliente:         %-10d                                                               ║
         ║ Dirección:                 %-15s                                                          ║
-        ║ Localidad:                 %-15s(%-15s)                                   ║
+        ║ Localidad:                 %-23s(%-15s)                                 ║
         ║ Trabajador Asignado:       %-25s                                                ║
         %s
         ║ PRODUCTOS:                                                                                          ║
         ╠-----------------------------------------------------------------------------------------------------╣
         %s
         ╠-----------------------------------------------------------------------------------------------------╣
-        ║ PRECIO TOTAL SIN IVA:      %-7.2f e                                                                ║
-        ║ IVA A IMPONER:             %-7.2f e                                                                ║
-        ║ PRECIO TOTAL CON IVA:      %-7.2f e                                                                ║
+        ║ PRECIO TOTAL SIN IVA:      %-10.2f e                                                             ║
+        ║ IVA A IMPONER:             %-10.2f e                                                             ║
+        ║ PRECIO TOTAL CON IVA:      %-10.2f e                                                             ║
         ╚═════════════════════════════════════════════════════════════════════════════════════════════════════╝
         """, pedidoExtendido.getId(), estado, Utils.fechaAString(pedidoExtendido.getFechaPedido()),
                 Utils.fechaAString(pedidoExtendido.getFechaEntregaEstimada()), datosCliente.getNombreCliente(),

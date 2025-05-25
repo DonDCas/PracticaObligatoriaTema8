@@ -480,6 +480,7 @@ public class Main {
             }
             if (!correo.isEmpty() && !clave.isEmpty()){
                 user = controlador.login(correo, clave);
+                if ((user instanceof Trabajador) && ((Trabajador) user).isBaja()) user = null;
                 if (user == null){
                     oportunidades++;
                     Utils.pulsaEnter("Error al autentificar. Quedan " + (4-oportunidades) + " oportunidades.");
@@ -489,7 +490,6 @@ public class Main {
             }
         }while (!loginVacio && user == null && oportunidades<4);
         if (user == null && !loginVacio) System.out.println("Demasiados intentos de autentificación. Se le regresara al menu inicial.");
-        if ((user instanceof Trabajador) && ((Trabajador) user).isBaja()) return null;
         return user;
     }
 
@@ -557,7 +557,7 @@ public class Main {
                 case 10-> menuAsignarPedidoATrabajador(controlador);
                 case 11-> mostrarUltimosIniciosSesion(controlador);
                 case 12-> exportarpedidosAExcel(controlador, user);
-                case 13-> exportarCopiaDeSeguridad(controlador);
+                case 13-> exportarCopiaDeSeguridad(controlador, user);
                 case 14 -> administrarConfiguracionApp(controlador);
                 case 15 -> modificarModoInvitado(controlador);
             }
@@ -584,23 +584,49 @@ public class Main {
 
     }
 
-    private static void exportarCopiaDeSeguridad(Controlador controlador) {
+    private static void exportarCopiaDeSeguridad(Controlador controlador, Admin user) {
+        //TODO Arreglar esta vaina
         String salida = "";
+        int op = -1;
         do {
-            System.out.println("¿Quieres exportarlo en la ruta por defecto? (S/N)");
-            salida = S.nextLine();
-            if (salida.equalsIgnoreCase("S")){
-                if (Persistencia.exportaCopiaDeSeguridad(controlador))
-                    System.out.println("Se ha realizado la copia de seguridad correctamente.");
-                else System.out.println("No se ha podido realizar la copia de seguridad.");
-            } else if (salida.equalsIgnoreCase("N")){
-                System.out.print("Introduce la ruta donde quieres ubicar el archivo (C:/[Introduzca la carpeta en las que dese que desea]): ");
-                String rutaArchivo = S.nextLine();
-                if (Persistencia.exportaCopiaDeSeguridad(controlador, rutaArchivo))
-                    System.out.println("Se ha realizado la copia de seguridad correctamente.");
-                else System.out.println("No se ha podido realizar la copia de seguridad.");
-            }else System.out.println("El valor introducido no es válido, vuelva a introducirlo");
-        }while (!salida.equalsIgnoreCase("S") && !salida.equalsIgnoreCase("N"));
+            op = -1;
+            Menu.menuSeguridad();
+            try {
+                op = Integer.parseInt(pedirPorTeclado("Introduce la opción deseada: "));
+            } catch (NumberFormatException e) {
+                Utils.pulsaEnter("Se introdujo la opción de forma incorrecta.");
+            }
+            switch (op) {
+                case 1 -> realizarCopiaSeguridad(controlador, user);
+                case 2 -> cargarCopiaSeguridad(controlador, user);
+                default -> realizarCopiaSeguridad(controlador, user);
+            }
+        } while (op != 0);
+    }
+
+    private static void cargarCopiaSeguridad(Controlador controlador, Admin user) {
+        Utils.limpiarPantalla();
+        PintaConsola.pintaAyudaRutas();
+        String rutaArchivo = pedirPorTeclado("Introduce la ruta en la que se encuentra el archivo de backup: ");
+        Controlador copiaControlador = controlador.importarCopiaDeSeguridad(rutaArchivo);
+        if (copiaControlador != null){
+            Utils.pulsaEnter("Se ha cargado la copia de seguiradad.");
+
+        }else Utils.pulsaEnter("Hubo algun error al importar la copia de seguridad.");
+    }
+
+    private static void realizarCopiaSeguridad(Controlador controlador, Admin user) {
+        if (pedirPorTecladoSN("¿Quieres exportarlo en la ruta por defecto? (S/N)").equalsIgnoreCase("s")) {
+                Utils.pulsaEnter(controlador.exportaCopiaDeSegridad("")
+                        ? "Se ha realizado la copia de seguridad correctamente."
+                        : "No se ha podido realizar la copia de seguridad.");
+        } else {
+            PintaConsola.pintaAyudaRutas();
+            String rutaArchivo = pedirPorTeclado("Introduce la ruta donde quieres ubicar los archivos: ");
+            Utils.pulsaEnter(controlador.exportaCopiaDeSegridad(rutaArchivo)
+                    ? "Se ha realizado la copia de seguridad correctamente."
+                    : "No se ha podido realizar la copia de seguridad.");
+        }
         Utils.pulsaEnter();
     }
 
@@ -798,8 +824,10 @@ public class Main {
                         PintaConsola.pintaDatosPersonalesTrabajador(trabajadorDeBaja);
                         if (pedirPorTecladoSN("Ya hay un trabajador registrado en la base de datos con el correo introducido que esta dado de baja\n" +
                                 "¿Quieres volver a darle de alta? (S/N): ").equalsIgnoreCase("S")){
-                            controlador.darAltaTrabajador(trabajadorDeBaja);
-                            trabajadorYaRegistrado = true;
+                            if (controlador.darAltaTrabajador(trabajadorDeBaja)){
+                                Utils.pulsaEnter("Trabajador dado de Alta");
+                                trabajadorYaRegistrado = true;
+                            }else Utils.pulsaEnter("No se ha podido dar de alta al nuevo trabajador.");
                         }else{
                             correoExiste = true;
                         }
@@ -849,7 +877,7 @@ public class Main {
                                         movil = Integer.parseInt(introMovil);
                                         if (!Utils.validaTelefono(movil)){
                                             System.out.println("Numero mal introducido.");
-                                            if (pedirPorTecladoSN("¿Quieres volver a intentar introducir un numero?(S/N: )").equalsIgnoreCase("n"))
+                                            if (pedirPorTecladoSN("¿Quieres volver a intentar introducir un numero?(S/N): ").equalsIgnoreCase("n"))
                                                 introMovil = "";
                                                 pedirMovil = false;
                                         }else pedirMovil = false;
@@ -954,7 +982,7 @@ public class Main {
                 if (pedidoBuscado == null) Utils.pulsaEnter("No se encontro un pedido con esa ID.");
                 else{
                     datosPedidoCliente = controlador.getPedidoClienteUnico(idPedido);
-                    PintaConsola.pintaDatosPedidoExtendido(pedidoBuscado, datosPedidoCliente);
+                    PintaConsola.pintaDatosPedidoExtendido(pedidoBuscado, datosPedidoCliente, null);
                     if(pedirPorTecladoSN("¿Quieres elegir este pedido para Asignar? (S/N): ").equalsIgnoreCase("S")){
                         pedidoElegido = true;
                         Utils.pulsaEnter("Pedido Elegido");
@@ -1027,7 +1055,7 @@ public class Main {
                 idPedido = PintaConsola.pintaPedidosAsignados(pedidosAsignados, controlador.getPedidosAsignadosTrabajador(pedidosAsignados));
                 if(!idPedido.isEmpty()){
                     PedidoClienteDataClass datosPedido = controlador.getPedidoClienteUnico(idPedido);
-                    PintaConsola.pintaDatosPedidoExtendido(controlador.buscaPedidoById(idPedido),datosPedido);
+                    PintaConsola.pintaDatosPedidoExtendido(controlador.buscaPedidoById(idPedido),datosPedido, user);
                     Utils.pulsaEnter("\nAqui tienes el pedido extendido.");
                 }
                 if (pedirPorTecladoSN("¿Quieres volver al menu de pedidos? (S/N): ").equalsIgnoreCase("n"))
@@ -1056,7 +1084,7 @@ public class Main {
                         Pedido pedido = controlador.buscaPedidoById(idPedido);
                         if (pedido != null){
                             PedidoClienteDataClass datosPedido = controlador.getPedidoClienteUnico(idPedido);
-                            PintaConsola.pintaDatosPedidoExtendido(pedido, datosPedido);
+                            PintaConsola.pintaDatosPedidoExtendido(pedido, datosPedido, user);
                             respuestaSN = pedirPorTecladoSN("Es este el pedido que quieres modificar (S/N): ");
                             if (respuestaSN.equalsIgnoreCase("s")) {
                                 modificarEstadoOAddComentario(controlador, user, pedido);
@@ -1257,7 +1285,7 @@ public class Main {
                     if (pedido == null) Utils.pulsaEnter("Pedido no encontrado");
                     else{
                         PedidoClienteDataClass datosPedidoCliente = controlador.getPedidoClienteUnico(idPedido);
-                        PintaConsola.pintaDatosPedidoExtendido(pedido,datosPedidoCliente);
+                        PintaConsola.pintaDatosPedidoExtendido(pedido,datosPedidoCliente, user);
                         Utils.pulsaEnter("\nAqui tienes el pedido extendido.");
                     }
                 }

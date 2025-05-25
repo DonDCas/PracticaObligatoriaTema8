@@ -30,9 +30,9 @@ public class DaoPedidosSQL implements DaoPedidos {
                 stmt = dao.getConn().prepareStatement(sentenciaProductos);
                 stmt.setString(1,pedido.getId());
                 ResultSet rs2 = stmt.executeQuery();;
-                ResultSet rs3 = rs2;
-                pedido.setProductos(leerResultadosArrayListProductos(rs2));
-                pedido.setCantidadProductos(leerResultadosMapaCantidadProductos(rs3));
+                HashMap<Integer,Integer> cantidadProductos = new HashMap<>();
+                pedido.setProductos(leerResultadosArrayListProductos(rs2, cantidadProductos));
+                pedido.setCantidadProductos(cantidadProductos);
             }
             return pedidos;
         } catch (Exception e) {
@@ -58,10 +58,10 @@ public class DaoPedidosSQL implements DaoPedidos {
             for(Pedido pedido : pedidos){
                 stmt = dao.getConn().prepareStatement(sentenciaProductos);
                 stmt.setString(1,pedido.getId());
-                ResultSet rs2 = stmt.executeQuery();;
-                ResultSet rs3 = rs2;
-                pedido.setProductos(leerResultadosArrayListProductos(rs2));
-                pedido.setCantidadProductos(leerResultadosMapaCantidadProductos(rs3));
+                ResultSet rs2 = stmt.executeQuery();
+                HashMap<Integer,Integer> cantidadProductos = new HashMap<>();
+                pedido.setProductos(leerResultadosArrayListProductos(rs2, cantidadProductos));
+                pedido.setCantidadProductos(cantidadProductos);
             }
             return pedidos;
         } catch (Exception e) {
@@ -86,9 +86,9 @@ public class DaoPedidosSQL implements DaoPedidos {
             stmt = dao.getConn().prepareStatement(sentenciaProductos);
             stmt.setString(1,pedido.getId());
             ResultSet rs2 = stmt.executeQuery();;
-            ResultSet rs3 = rs2;
-            pedido.setProductos(leerResultadosArrayListProductos(rs2));
-            pedido.setCantidadProductos(leerResultadosMapaCantidadProductos(rs3));
+            HashMap<Integer,Integer> cantidadProductos = new HashMap<>();
+            pedido.setProductos(leerResultadosArrayListProductos(rs2, cantidadProductos));
+            pedido.setCantidadProductos(cantidadProductos);
             return pedido;
         } catch (Exception e) {
             return null;
@@ -170,10 +170,10 @@ public class DaoPedidosSQL implements DaoPedidos {
             for(Pedido pedido : pedidos){
                 stmt = dao.getConn().prepareStatement(sentenciaProductos);
                 stmt.setString(1,pedido.getId());
-                ResultSet rs2 = stmt.executeQuery();;
-                ResultSet rs3 = rs2;
-                pedido.setProductos(leerResultadosArrayListProductos(rs2));
-                pedido.setCantidadProductos(leerResultadosMapaCantidadProductos(rs3));
+                ResultSet rs2 = stmt.executeQuery();
+                HashMap<Integer,Integer> cantidadProductos = new HashMap<>();
+                pedido.setProductos(leerResultadosArrayListProductos(rs2, cantidadProductos));
+                pedido.setCantidadProductos(cantidadProductos);
             }
             return pedidos;
         } catch (Exception e) {
@@ -201,10 +201,10 @@ public class DaoPedidosSQL implements DaoPedidos {
             for(Pedido pedido : pedidos){
                 stmt = dao.getConn().prepareStatement(sentenciaProductos);
                 stmt.setString(1,pedido.getId());
-                ResultSet rs2 = stmt.executeQuery();;
-                ResultSet rs3 = rs2;
-                pedido.setProductos(leerResultadosArrayListProductos(rs2));
-                pedido.setCantidadProductos(leerResultadosMapaCantidadProductos(rs3));
+                ResultSet rs2 = stmt.executeQuery();
+                HashMap<Integer,Integer> cantidadProductos = new HashMap<>();
+                pedido.setProductos(leerResultadosArrayListProductos(rs2, cantidadProductos));
+                pedido.setCantidadProductos(cantidadProductos);
             }
             return pedidos;
         } catch (Exception e) {
@@ -280,25 +280,14 @@ public class DaoPedidosSQL implements DaoPedidos {
         return true;
     }
 
-    private HashMap<Integer, Integer> leerResultadosMapaCantidadProductos(ResultSet rs3) {
-        HashMap<Integer, Integer> cantidadProductos = new HashMap<>();
-        try{
-            while (rs3.next()){
-                cantidadProductos.put(rs3.getInt("id_producto"),rs3.getInt("cantidadProducto"));
-            }
-            return cantidadProductos;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private ArrayList<Producto> leerResultadosArrayListProductos(ResultSet rs2) {
+    private ArrayList<Producto> leerResultadosArrayListProductos(ResultSet rs2, HashMap<Integer, Integer> cantidadProductos) {
         ArrayList<Producto> productosPedido = new ArrayList<>();
         Producto producto = null;
         try{
             while (rs2.next()){
                 producto = leerLineaConsultaProductos(rs2);
                 productosPedido.add(producto);
+                cantidadProductos.put(producto.getId(),rs2.getInt("cantidadProducto"));
             }
             return productosPedido;
         } catch (SQLException e) {

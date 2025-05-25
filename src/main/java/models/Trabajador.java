@@ -8,10 +8,10 @@ public class Trabajador extends Usuario {
     private int idTelegram;
 
     //Constructor
-    public Trabajador(String id, String email, String clave, String nombre, int movil,int idTelegram) {
+    public Trabajador(String id, String email, String clave, String nombre, int movil,int idTelegram, boolean baja) {
         super(id,nombre,clave,email,movil);
         this.idTelegram = idTelegram;
-        baja = false;
+        this.baja = baja;
     }
 
     public Trabajador(Trabajador trabajador) {

@@ -120,7 +120,7 @@ public class Pedido implements Comparable<Pedido>, Serializable {
 
     public float calculaTotalPedidoSinIVA(){
         float precioSinIva = 0;
-        for (Producto p : productos) precioSinIva += p.getPrecio();
+        for (Producto p : productos) precioSinIva += (p.getPrecio()*cantidadProductos.get(p.getId()));
         return precioSinIva;
     }
 
@@ -129,10 +129,7 @@ public class Pedido implements Comparable<Pedido>, Serializable {
     public float calculaTotalPedidoConIVA (int IVA){return calculaTotalPedidoSinIVA() + calculaIVAPedido(IVA);}
     
     public int numArticulos(){return productos.size();}
-    
-    public Producto buscaProducto(int idProducto){
-        for(Producto p : productos) if (p.getId() == idProducto) return p;
-        return null;}
+
 
     //public void addProducto(Producto producto){}
 
@@ -142,15 +139,4 @@ public class Pedido implements Comparable<Pedido>, Serializable {
         return (this.fechaPedido).compareTo(p.fechaPedido);
     }
 
-    public boolean addComentario(String comentario) {
-        if (comentario.isEmpty()) return false;
-        if (this.comentario.equals("Sin comentarios")) this.comentario = "";
-        this.comentario += "\n - " + comentario;
-        return true;
-    }
-
-    public boolean cambiaFechaEntregaCandelado() {
-        fechaEntregaEstimada = null;
-        return true;
-    }
 }
