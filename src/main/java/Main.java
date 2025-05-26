@@ -761,10 +761,12 @@ public class Main {
     //Menu para que el Admin elija que pedido quiere modificarle el estado o añadirle un comentario.
     private static void menuModificarEstadoAdmin(Controlador controlador) {
         String idPedido;
-        ArrayList<Pedido> todoslosPedidos = controlador.getTodosPedidos();
-        ArrayList<PedidoClienteDataClass> datosCliente = controlador.getTodosPedidosConCliente();
+        ArrayList<Pedido> todoslosPedidos = new ArrayList<>();
+        ArrayList<PedidoClienteDataClass> datosCliente = new ArrayList<>();
         Pedido pedidoExtendido = null;
         do{
+            todoslosPedidos = controlador.getTodosPedidos();
+            datosCliente = controlador.getTodosPedidosConCliente();
             idPedido = "";
             Utils.limpiarPantalla();
             idPedido = PintaConsola.pintaResumenPedidos(todoslosPedidos, datosCliente);
@@ -1082,6 +1084,7 @@ public class Main {
         }
         else{
             do{
+                pedidosTrabajador = controlador.recuperaPedidosPendientesTrabajador(user);
                 Utils.limpiarPantalla();
                 op = -1;
                 idPedido = "";
@@ -1103,8 +1106,10 @@ public class Main {
                             Utils.pulsaEnter("No se encontro el pedido solicitado.");
                         }
                     }
-                    if (pedirPorTecladoSN("¿Quieres volver al menu de pedidos? (S/N): ").equalsIgnoreCase("n"))
+                    if (pedirPorTecladoSN("¿Quieres volver al menu de pedidos? (S/N): ").equalsIgnoreCase("n")){
+                        pedidosTrabajador = controlador.recuperaPedidosPendientesTrabajador(user);
                         idPedido="";
+                    }
                 }
                 else Utils.pulsaEnter("No tienes pedidos asignados.");
             }while (!idPedido.isEmpty());
