@@ -33,15 +33,15 @@ Para descargar este programa en GitHub deberemos de cliquear el botón verde de 
 
 Cuando se nos descargue el archivo comprimido, lo descomprimimos y en la nueva carpeta encontraremos archivo Start.bat que será el que ejecute nuestro programa.
 
-# 2. Menú Inicio
+Si usted desea realizar modificaciones en el codigo debe de saber que este codigo no contiene el archivo config.properties y que deberá crearlo por su cuenta o ponerse en contacto con el creador de este codigo.
 
-Antes de iniciar que el usuario pueda acceder al menu inicial la app cargará los datos de la carpeta ./data que se encuentra en la misma carpeta que el archivo start. En caso de que esta carpeta no exista en el mismo directorio que el archivo start.bat se creará una carpeta y se cargarán unos datos de default.
+# 2. Menú Inicio
 
 
 Cuando iniciemos la aplicación encontraremos un logo representativo de la empresa FernanShop junto con sus opciones de 
-1. Mostrar Catálogo
-2. Registrarse
-3. Iniciar Sesión
+1. Registrarse
+2. Iniciar Sesión
+3. Mostrar Catálogo
 
 ![Captura de pantalla 2025-03-23 124422](https://github.com/user-attachments/assets/4ca93ce4-7e7e-474c-b64a-8a8742128af9)
 
@@ -56,21 +56,22 @@ Al acceder el usuario tendrá la opción se desplegará un submenú en el que el
 Siendo las opciones las siguientes:
 
 1. Ver el catálogo completo
-Se mostrarán todos los productos del catalogo de 5 en 5
+Se mostrarán todos los productos del catalogo de 5 en 5 trayendolos desde la base de datos
 
 2. Mostrar productos por descripción
-Se mostrarán los productos cuya descripción incluyan el texto que el usuario le pase por teclado
+Se realizará una consulta a la base de datos y la aplicación nos motrará todos los productos que contengán en su descripción lo que el usuario nos indique por teclado.
 
 3. Mostrar productos por marca
-En primer lugar se le mostrará un listado de todas las marcas de las que disponemos actualmente. Tras esta lista el usuario podrá buscar productos que en su marca incluyan el texto que el usuario escriba.
+En primer lugar se le mostrará un listado de todas las marcas de las que disponemos actualmente. Tras esta lista el usuario podrá buscar en la base de datos los productos que en su marca incluyan el texto que el usuario escriba.
 
 4. Mostrar productos por modelo
-El usuario tendrá la oportunidad de buscar entre los productos aquellos cuyo modelo incluya el texto que el usuario escriba.
+El usuario tendrá la oportunidad de buscar en la base de datos entre los productos aquellos cuyo modelo incluya el texto que el usuario escriba.
 
 5. Mostrar productos por rango de precio
-El usuario puede indicar un rango de precios y se le mostrarán sólo aquellos productos que estén en este rango.
+Se realizará una consulta en la que el cliente indicará los precios maximos y minimos que le interesen buscar. Si no incluye alguno de estos valores no se tendra para realizar la busqueda.
+Por ejemplo si no indicamos un valor minimo en nuetra consulta se buscará en la base de datos todos los productos cuyo precio sea como maximo el indicado pero sin buscar un minimo.
 
-6. Mostrar productos por término
+7. Mostrar productos por término
 El usuario podrá introducir un texto y se le mostrarán todos los productos que incluya dicho texto ya sea en su marca, modelo o descripción.
 
 Si el producto está en promoción el producto aparecerá resaltado de forma distintiva a los demás.
@@ -92,7 +93,7 @@ A la hora de ingresar la contraseña es necesario que esta incluya:
 
 Por último el número de teléfono se comprobará si tiene 9 dígitos y si inicia por 6 o por 7.
 
-Cuando termine el registro el usuario (ahora cliente) recibirá un correo electrónico que incluirá un token que se le necesitará para validar su cuenta la próxima vez que use la tercera opción del menú inicial y tras esto el usuario recién registrado podrá iniciar sesión en su menú de cliente si lo desea pero esto no le eximirá de validar su correo cuando sea necesario.
+Cuando termine el registro el usuario (ahora cliente) recibirá un correo electrónico que incluirá un token que se le necesitará para validar su cuenta la próxima vez que use la segunda opción del menú inicial y tras esto el usuario recién registrado podrá iniciar sesión en su menú de cliente si lo desea pero esto no le eximirá de validar su correo cuando sea necesario.
 
 ![Captura de pantalla 2025-03-23 175943](https://github.com/user-attachments/assets/34fd92c7-f507-4935-a4b7-1a7e44e09af0)
 
