@@ -376,3 +376,16 @@
 [Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-25T09:30:28.547887800
 [Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-25T09:33:16.303521200
 [Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-25T09:37:38.732406400
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-25T10:01:50.107928900
+[Inicio de sesion]: Javier Cli;dondcas@gmail.com;Cliente;2025-05-26T21:10:04.588275500
+[Cierre de sesion]: Javier Cli;dondcas@gmail.com;Cliente;2025-05-26T21:10:07.809496300
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-26T21:10:15.678117600
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-26T22:09:47.125550300
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-26T22:10:31.535732200
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-26T22:11:35.293756200
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-26T22:19:40.834064700
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-26T22:23:41.314629900
+[Modificacion Pedido]: P2;Estado;3;2025-05-26T22:36:29.456789200
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-26T22:44:14.531552500
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-26T22:51:22.728679200
+[Inicio de sesion]: Paco;don.92.ald@gmail.com;Admin;2025-05-26T22:52:22.392032300

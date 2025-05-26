@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Properties;
 
 public class Controlador implements Serializable {
     public DAOManager dao;
@@ -687,10 +688,11 @@ public class Controlador implements Serializable {
     }
 
     public boolean exportaCopiaDeSegridad(String ruta) {
-        return Persistencia.exportaCopiaDeSeguridad(this, ruta);
+        return dao.hacerBackup(ruta);
+        //return Persistencia.exportaCopiaDeSeguridad(this, ruta);
     }
 
-    public Controlador importarCopiaDeSeguridad(String rutaArchivo) {
-        return Persistencia.importaCopiaDeSeguridad(rutaArchivo);
+    public boolean importarCopiaDeSeguridad(String rutaArchivo) {
+        return dao.restaurarBackup(rutaArchivo);
     }
 }

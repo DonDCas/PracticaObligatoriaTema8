@@ -609,19 +609,23 @@ public class Main {
     }
 
     private static void cargarCopiaSeguridad(Controlador controlador, Admin user) {
-        Utils.limpiarPantalla();
-        PintaConsola.pintaAyudaArchivos();
-        String rutaArchivo = pedirPorTeclado("Introduce la ruta en la que se encuentra el archivo de backup: ");
-        Controlador copiaControlador = controlador.importarCopiaDeSeguridad(rutaArchivo);
-        if (copiaControlador != null){
-            controlador = copiaControlador;
-            Utils.pulsaEnter("Se ha cargado la copia de seguiradad.");
+        String rutaArchivo = "";
+        do{
+            Utils.limpiarPantalla();
+            PintaConsola.pintaAyudaArchivos();
+            rutaArchivo = pedirPorTeclado("Introduce la ruta en la que se encuentra el archivo de backup: ");
+            if (!rutaArchivo.isEmpty()){
+                Utils.pulsaEnter(controlador.importarCopiaDeSeguridad(rutaArchivo)
+                        ? "Se ha cargado la copia de seguiradad."
+                        : "Hubo algun error al importar la copia de seguridad.");
 
-        }else Utils.pulsaEnter("Hubo algun error al importar la copia de seguridad.");
+            }else Utils.pulsaEnter("Debes de introducir una ruta al archivo que sea correcta. ");
+
+        } while (rutaArchivo.isEmpty());
     }
 
     private static void realizarCopiaSeguridad(Controlador controlador, Admin user) {
-        if (pedirPorTecladoSN("¿Quieres exportarlo en la ruta por defecto? (S/N)").equalsIgnoreCase("s")) {
+        if (pedirPorTecladoSN("¿Quieres exportarlo en la ruta por defecto? (S/N): ").equalsIgnoreCase("s")) {
                 Utils.pulsaEnter(controlador.exportaCopiaDeSegridad("")
                         ? "Se ha realizado la copia de seguridad correctamente."
                         : "No se ha podido realizar la copia de seguridad.");
