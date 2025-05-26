@@ -585,7 +585,6 @@ public class Main {
     }
 
     private static void exportarCopiaDeSeguridad(Controlador controlador, Admin user) {
-        //TODO Arreglar esta vaina
         String salida = "";
         int op = -1;
         do {

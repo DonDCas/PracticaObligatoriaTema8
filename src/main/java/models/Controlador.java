@@ -688,11 +688,13 @@ public class Controlador implements Serializable {
     }
 
     public boolean exportaCopiaDeSegridad(String ruta) {
+        if (ruta.contains("\"")) ruta = Utils.limpiarComillasExtremas(ruta);
         return dao.hacerBackup(ruta);
         //return Persistencia.exportaCopiaDeSeguridad(this, ruta);
     }
 
     public boolean importarCopiaDeSeguridad(String rutaArchivo) {
+        if (rutaArchivo.contains("\"")) rutaArchivo = Utils.limpiarComillasExtremas(rutaArchivo);
         return dao.restaurarBackup(rutaArchivo);
     }
 }

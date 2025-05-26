@@ -235,4 +235,16 @@ public class Utils {
         String unidadExistente = rutaBase.substring(0, 2); // e.g., "C:"
         return nuevaRuta.matches("^" + unidadExistente + "\\\\.*");
     }
+
+    public static String limpiarComillasExtremas(String texto) {
+        if (texto == null || texto.isEmpty()) return texto;
+
+        // Repetimos hasta que no queden comillas en los extremos
+        while ((texto.startsWith("\"") && texto.endsWith("\"")) ||
+                (texto.startsWith("'") && texto.endsWith("'"))) {
+            texto = texto.substring(1, texto.length() - 1);
+        }
+
+        return texto;
+    }
 }
